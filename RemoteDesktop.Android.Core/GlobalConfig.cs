@@ -55,7 +55,7 @@ namespace RemoteDesktop.Android.Core
             //public static bool isEncodeWithOggOpus = false;
             //public static bool isUseOggfilePkg = true;
             public static int caputuedPcmBufferSamples = 0; //128; // AACの adtsフォーマットだったら 1024 * N (100とか) にする
-            public static int h246EncoderBitPerSec = 5 * 1024 * 8;
+            public static int h246EncoderBitPerSec = 512 * 8; //5 * 1024 * 8;
             //public static float h264EncoderFrameRate = 1.0f;
             public static float h264EncoderKeyframeInterval = 60.0f;
             public static bool isStdOutOff = false;
