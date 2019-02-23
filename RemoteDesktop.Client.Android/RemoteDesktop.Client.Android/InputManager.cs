@@ -12,6 +12,8 @@ namespace RemoteDesktop.Client.Android
     {
         private DataSocket socket;
         private Xamarin.Forms.AbsoluteLayout layout;
+        private ViewGestures tapViewGestures;
+
         public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout)
         {
             this.socket = socket;
@@ -23,13 +25,14 @@ namespace RemoteDesktop.Client.Android
 			//	FontSize = 30
 			//};
 
-            var tapViewGestures = new ViewGestures
+            tapViewGestures = new ViewGestures
             {
-                //BackgroundColor = Color.Transparent,
-                BackgroundColor = Color.MistyRose,
+                BackgroundColor = Color.Transparent,
+                //BackgroundColor = Color.MistyRose,
                 //Content = pressLabel,
-                AnimationEffect = ViewGestures.AnimationType.atScaling,
-                AnimationScale = -5,
+                //AnimationEffect = ViewGestures.AnimationType.atScaling,
+                //AnimationScale = -5,
+                AnimationEffect = ViewGestures.AnimationType.atNone,
 //                HorizontalOptions = LayoutOptions.FillAndExpand,
 //                VerticalOptions = LayoutOptions.FillAndExpand
                 HorizontalOptions = LayoutOptions.Fill,
@@ -85,9 +88,16 @@ namespace RemoteDesktop.Client.Android
                 });
             };
             
-            layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
+            //layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
         }
 
+        // called from UI thread
+        public void addGestureViewLayer()
+        {
+            Device.BeginInvokeOnMainThread(() => {
+                layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
+            });
+        }
 //        private void inputUpdate(object state)
         private void inputUpdate(int code)
         {

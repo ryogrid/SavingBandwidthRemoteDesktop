@@ -101,9 +101,6 @@ namespace RemoteDesktop.Server
                 kickFFMPEG();
             }
 
-            // 音声配信サーバ
-            if(GlobalConfiguration.isEnableSoundStreaming) cap_streamer = new CaptureSoundStreamer();
-
 /*
             //// init input simulation
             if (GlobalConfiguration.isEnableInputDeviceController)
@@ -138,6 +135,9 @@ namespace RemoteDesktop.Server
                     input = new InputSimulator();
                 }
             }
+
+            // 音声配信サーバ
+            if(GlobalConfiguration.isEnableSoundStreaming) cap_streamer = new CaptureSoundStreamer();
         }
 
         // set ffmpegProc field	

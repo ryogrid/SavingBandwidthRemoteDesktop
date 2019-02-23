@@ -16,12 +16,12 @@ using RemoteDesktop.Android.Core;
 
 namespace RemoteDesktop.Client.Android
 {
-    enum UIStates
-    {
-        Stopped,
-        Streaming,
-        Paused
-    }
+    //enum UIStates
+    //{
+    //    Stopped,
+    //    Streaming,
+    //    Paused
+    //}
 
     enum BITMAP_DISPLAY_COMPONENT_TAG
     {
@@ -38,7 +38,7 @@ namespace RemoteDesktop.Client.Android
         private MetaData metaData;
         private MemoryStream compressedStream;
         private bool isDisposed;
-        private UIStates uiState = UIStates.Stopped;
+        //private UIStates uiState = UIStates.Stopped;
 
         //private Timer inputTimer;
         //private bool mouseUpdate;
@@ -254,7 +254,7 @@ namespace RemoteDesktop.Client.Android
                 {
                     if(socket != null) socket.Dispose();
                     socket = null;
-                    SetConnectionUIStates(UIStates.Stopped);
+                    //SetConnectionUIStates(UIStates.Stopped);
                 });
             }
             if(vdecoder != null)
@@ -286,23 +286,32 @@ namespace RemoteDesktop.Client.Android
 
         protected override void OnSizeAllocated(double width, double height)
         {
+            base.OnSizeAllocated(width, height);
+
             Console.WriteLine("OnSizeAllocated: " + width.ToString() + "x" + height.ToString());
 
-            this.isAppDisplaySizeGot = true;
             RDPSessionPage.width = (int)width;
             RDPSessionPage.height = (int)height;
-            base.OnSizeAllocated(width, height);
+            if (GlobalConfiguration.isEnableImageStreaming)
+            {
+                addBitmatDisplayComponentToLayout();
+            }
+            if (input != null)
+            {
+                input.addGestureViewLayer();
+            }
+            this.isAppDisplaySizeGot = true;
         }
 
-        private void SetConnectionUIStates(UIStates state)
-        {
-            uiState = state;
-        }
+        //private void SetConnectionUIStates(UIStates state)
+        //{
+        //    uiState = state;
+        //}
 
         private void connectToInputServer()
         {
             // handle connect
-            SetConnectionUIStates(UIStates.Streaming);
+            //SetConnectionUIStates(UIStates.Streaming);
             input = new InputManager(socket, layout);
 /*
             socket = new DataSocket(NetworkTypes.Client);
@@ -320,7 +329,7 @@ namespace RemoteDesktop.Client.Android
         private void connectToImageServer()
         {
             // handle connect
-            SetConnectionUIStates(UIStates.Streaming);
+            //SetConnectionUIStates(UIStates.Streaming);
 /*
             socket = new DataSocket(NetworkTypes.Client);
             socket.ConnectedCallback += Socket_ConnectedCallback;
@@ -411,6 +420,7 @@ namespace RemoteDesktop.Client.Android
                         return;
                     }
 
+/*
                     if (isAppDisplaySizeGot && (isBitDisplayComponetsAdded == false))
                     {
                         addBitmatDisplayComponentToLayout();
@@ -418,6 +428,7 @@ namespace RemoteDesktop.Client.Android
                         //isBitDisplayComponetsAdded = true;
                     }
 
+*/
 
                     try
                     {
@@ -648,7 +659,7 @@ namespace RemoteDesktop.Client.Android
                 socket.Dispose();
                 socket = null;
 
-                SetConnectionUIStates(UIStates.Stopped);
+                //SetConnectionUIStates(UIStates.Stopped);
             });
         }
 
