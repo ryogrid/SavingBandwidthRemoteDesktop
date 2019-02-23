@@ -168,6 +168,54 @@ namespace RemoteDesktop.Server.XamaOK
 
             return result_buf;
         }
+
+        private byte[] convert32bitFloat48000HzStereoPCMTo16bitMonoPCM_Alpha(WaveInEventArgs e, int sampleRate)
+        {
+            byte[] recorded_buf = e.Buffer;
+            int recorded_length = e.BytesRecorded;
+
+            byte[] result_buf = null;
+            int result_len = -1;
+
+            try
+            {
+                //// 生データを再生可能なデータに変換
+                var waveBufferResample = new BufferedWaveProvider(this._WaveIn.WaveFormat);
+                waveBufferResample.DiscardOnBufferOverflow = true;
+                waveBufferResample.ReadFully = false;  // leave a buffer?
+                waveBufferResample.BufferLength = recorded_length;
+                var sampleStream = new WaveToSampleProvider(waveBufferResample);
+
+                // Downsample
+                var resamplingProvider = new WdlResamplingSampleProvider(sampleStream, sampleRate);
+
+                // Stereo to mono
+                var monoProvider = new StereoToMonoSampleProvider(resamplingProvider)
+                {
+                    LeftVolume = 1f,
+                    RightVolume = 1f
+                };
+
+                // Convert to 32bit float to 16bit PCM
+                var ieeeToPcm = new SampleToWaveProvider16(monoProvider);
+                var depthConvertProvider = new WaveFormatConversionProvider(new WaveFormat(sampleRate, 8, 1), ieeeToPcm);
+                var depthConvertProviderRev = new WaveFormatConversionProvider(new WaveFormat(sampleRate, 16, 1), depthConvertProvider);
+
+                waveBufferResample.AddSamples(recorded_buf, 0, recorded_length);
+
+                result_len = recorded_length / (2 * (48000 / sampleRate) * 2); // depth conv and sampling and ch conv
+                result_buf = new byte[result_len];
+                depthConvertProviderRev.Read(result_buf, 0, result_len);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                Console.WriteLine("exit...");
+                System.Windows.Forms.Application.Exit();
+            }
+
+            return result_buf;
+        }
 /*
         private byte[] convertIEEE32bitFloatTo8bitPCMAndEncodeToMP3(WaveInEventArgs e)
         {
@@ -323,6 +371,7 @@ namespace RemoteDesktop.Server.XamaOK
                 }
 
                 byte[] conved_pcm = convert32bitFloat48000HzStereoPCMTo16bitMonoPCM(e, GlobalConfiguration.SamplesPerSecond);
+                //byte[] conved_pcm = convert32bitFloat48000HzStereoPCMTo16bitMonoPCM_Alpha(e, GlobalConfiguration.SamplesPerSecond);
                 Console.WriteLine(Utils.getFormatedCurrentTime() + " DEBUG: pass " + conved_pcm.Length.ToString() + " bytes to opus encoder");
 
                 // エンコーダクラスが流量制御をして送信まで行う
