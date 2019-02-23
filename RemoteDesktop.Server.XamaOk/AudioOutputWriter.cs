@@ -367,7 +367,8 @@ namespace RemoteDesktop.Server.XamaOK
             {
                 if (m_opusEncoder == null)
                 {
-                    m_opusEncoder = new OpusEncoderManager(this, GlobalConfiguration.SamplesPerSecond);
+//                    m_opusEncoder = new OpusEncoderManager(this, GlobalConfiguration.SamplesPerSecond);
+                    m_opusEncoder = new OpusEncoderManager(this, GlobalConfiguration.SampleRateDummyForSoundEnDecoder);
                 }
 
                 byte[] conved_pcm = convert32bitFloat48000HzStereoPCMTo16bitMonoPCM(e, GlobalConfiguration.SamplesPerSecond);

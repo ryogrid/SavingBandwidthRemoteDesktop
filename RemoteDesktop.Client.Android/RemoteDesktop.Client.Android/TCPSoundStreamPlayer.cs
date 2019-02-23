@@ -114,7 +114,8 @@ namespace RemoteDesktop.Client.Android
                         m_Player.Open("hoge", GlobalConfiguration.SamplesPerSecond, config.BitsPerSample, config.Channels, config.BufferCount);
                         m_Player.Play();
 
-                        concentusOpusDecoder = OpusDecoder.Create(GlobalConfiguration.SamplesPerSecond, config.Channels);
+                        //concentusOpusDecoder = OpusDecoder.Create(GlobalConfiguration.SamplesPerSecond, config.Channels);
+                        concentusOpusDecoder = OpusDecoder.Create(GlobalConfiguration.SampleRateDummyForSoundEnDecoder, config.Channels);
                         //m_DPlayer.setup(RTPConfiguration.SamplesPerSecond, config.Channels, -1, csd_0, "opus");
                     }
                     else

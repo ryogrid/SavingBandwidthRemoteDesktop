@@ -34,7 +34,6 @@ namespace RemoteDesktop.Android.Core
             //public static bool isCheckAdtsFrameNum = true;
             //public static int SamplesPerSecond = 44100;
             //public static int SamplesPerSecond = 24000;
-            public static int SamplesPerSecond = 8000; //48000; // sound card native (for opus test)
             public short BitsPerSample = 16;
             //public short BitsPerSample = 16;
             //public short BitsPerSample = 32;  // sound card native
@@ -63,9 +62,12 @@ namespace RemoteDesktop.Android.Core
             public static int ffmpegStdoutFirstSendBytes = 512; //1024 * 8; //1024 * 2; //最初はためて送ってみる
             public static bool isUseLossySoundDecoder = true;
             public static int encoderBps = 6 * 1024; //8 * 1024;
-            public static int samplesPerPacket = 320; // <= 8000 * (1/25) //160; // <= 8000 * (1/50) //960;
 
-            public static bool isEnableImageStreaming = true;
+            public static int SamplesPerSecond = 8000; //48000; // sound card native (for opus test)
+            public static int samplesPerPacket = 640; //320; // <= 8000 * (1/25) //160; // <= 8000 * (1/50) //960;
+            public static int SampleRateDummyForSoundEnDecoder = 16000;
+
+            public static bool isEnableImageStreaming = false;
             public static bool isEnableSoundStreaming = true;
             public static bool isEnableInputDeviceController = true;
 
