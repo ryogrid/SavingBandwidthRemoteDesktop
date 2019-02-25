@@ -67,7 +67,7 @@ namespace RemoteDesktop.Android.Core
             public static int samplesPerPacket = 640; //320; // <= 8000 * (1/25) //160; // <= 8000 * (1/50) //960;
             public static int SampleRateDummyForSoundEnDecoder = 16000;
 
-            public static bool isEnableImageStreaming = false;
+            public static bool isEnableImageStreaming = true;
             public static bool isEnableSoundStreaming = true;
             public static bool isEnableInputDeviceController = true;
 
