@@ -314,7 +314,7 @@ namespace RemoteDesktop.Server.XamaOK
 
         private void WaveInOnDataAvailable(object sender, WaveInEventArgs e)
         {
-            Console.WriteLine($"{DateTime.Now:yyyy/MM/dd hh:mm:ss.fff} : {e.BytesRecorded} bytes");
+            //Console.WriteLine($"{DateTime.Now:yyyy/MM/dd hh:mm:ss.fff} : {e.BytesRecorded} bytes");
 
             if (GlobalConfiguration.isRunCapturedSoundDataHndlingWithoutConn == false && sdsock.IsConnected() == false)
             {

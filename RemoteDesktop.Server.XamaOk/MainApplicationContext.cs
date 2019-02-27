@@ -36,7 +36,7 @@ namespace RemoteDesktop.Server
         //System.Drawing.Imaging.PixelFormat format = System.Drawing.Imaging.PixelFormat.Format32bppRgb;
         int screenIndex, currentScreenIndex;
         float targetFPS = 1.0f;
-        float fixedTargetFPS = 1.0f;
+        float fixedTargetFPS = 1.0f; //400.0f;
         bool compress = false; //, currentCompress;
         bool isFixedParamUse = true; // use server side hard coded parameter on running
         bool fixedCompress = false;
