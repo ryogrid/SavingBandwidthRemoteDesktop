@@ -158,6 +158,8 @@ namespace RemoteDesktop.Client.Android.Droid
             inputFormat = MediaFormat.CreateVideoFormat(MIME, width, height);
             inputFormat.SetInteger(MediaFormat.KeyMaxInputSize, width * height);
             inputFormat.SetInteger("durationUs", 63446722);
+            //inputFormat.SetInteger(MediaFormat.KeyColorFormat, (int)MediaCodecCapabilities.Formatyuv420semiplanar);
+            //inputFormat.SetInteger(MediaFormat.KeyIFrameInterval, 60);
             try
             {
                 mDecoder.Configure(inputFormat, null, null, 0 /* Decoder */);

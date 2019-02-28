@@ -536,8 +536,21 @@ namespace RemoteDesktop.Server
         private void h264RawDataHandlerSendTCP(byte[] data)
         {
             BitmapXama bmpXama = new BitmapXama(data);
-            bmpXama.Width = screenRect.Width;
-            bmpXama.Height = screenRect.Height;
+            int width;
+            int height;
+            if (isFixedParamUse)
+            {
+                width = (int) (screenRect.Width * fixedResolutionScale);
+                height = (int) (screenRect.Height * fixedResolutionScale);
+            }
+            else
+            {
+                width = (int) (screenRect.Width * resolutionScale);
+                height = (int) (screenRect.Height * resolutionScale);
+            }
+            // 90度ひねっているので 縦横は逆に設定する
+            bmpXama.Width = height;
+            bmpXama.Height = width;
 
             socket.SendImage(bmpXama, screenRect.Width, screenRect.Height, screenIndex, compress, targetFPS);
         }
