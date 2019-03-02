@@ -407,7 +407,7 @@ namespace RemoteDesktop.Android.Core
         public static byte[] YV12ToRGBA8888(byte[] yuvBuffer, int width, int height)
         {
             byte[] rgbBuffer = new byte[width * height * 4];
-            byte y = 0;
+            byte[] y = new byte[] { 0, 0 };
             byte u = 0;
             byte v = 0;
             int r = 0;
@@ -419,19 +419,18 @@ namespace RemoteDesktop.Android.Core
             {
                 for (int colCnt = 0; colCnt < width; colCnt+=2)
                 {
-                  　int floor_col = (int)Math.Truncate((decimal)(colCnt/2));
-                    u = yuvBuffer[u_idx_start + floor_col];
-                    v = yuvBuffer[v_idx_start + floor_col];
+                    u = yuvBuffer[u_idx_start + colCnt];
+                    v = yuvBuffer[v_idx_start + colCnt];
 
                     for (int cnt = 0; cnt < 2; cnt++)
                     {
-                        y = yuvBuffer[rowCnt * width + colCnt];
+                        y[cnt] = yuvBuffer[rowCnt * width + colCnt + cnt];
 
-                        r = CONVERT_R(y, v);
+                        r = CONVERT_R(y[cnt], v);
                         r = CLIP(r);
-                        g = CONVERT_G(y, u, v);
+                        g = CONVERT_G(y[cnt], u, v);
                         g = CLIP(g);
-                        b = CONVERT_B(y, u);
+                        b = CONVERT_B(y[cnt], u);
                         b = CLIP(b);
                         rgbBuffer[(rowCnt * width + colCnt) * 4 + 0] = (byte)r;
                         rgbBuffer[(rowCnt * width + colCnt) * 4 + 1] = (byte)g;
@@ -440,8 +439,8 @@ namespace RemoteDesktop.Android.Core
                     }
                 }
 
-                u_idx_start += width * (rowCnt % 2);
-                v_idx_start += width * (rowCnt % 2);
+                u_idx_start += (width / 2) * (rowCnt % 2);
+                v_idx_start += (width / 2) * (rowCnt % 2);
             }
             return rgbBuffer;
         }
