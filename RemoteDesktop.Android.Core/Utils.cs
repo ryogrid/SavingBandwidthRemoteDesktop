@@ -487,7 +487,6 @@ namespace RemoteDesktop.Android.Core
             return rgbBuffer;
         }
 
-/*
         public static byte RYUVRGB24CI2V16_RANGECHECK_0TO255(int x) {
             return (byte)((((x) <= 255) && ((x) >= 0)) ? ((x)) : (((x) > 255) ? (255) : (0)));
          }
@@ -598,7 +597,6 @@ namespace RemoteDesktop.Android.Core
 
             return rgbBuffer;
         }
-*/
 
         //// for canvas setting is Argb8888
         public static byte[] convertBitmapBGR24toBGRA32(byte[] bitmap)
