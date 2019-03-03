@@ -449,7 +449,7 @@ namespace RemoteDesktop.Android.Core
         {
             byte[] rgbBuffer = new byte[width * height * 4];
             //sbyte[] yuvBufferSbyte = convertByteArrToSbyteArr(yuvBuffer);
-            int[] y = new int[] { 0, 0 };
+            int[] y = new int[] { 0, 0, 0, 0 };
             int u = 0;
             int v = 0;
             int r = 0;
@@ -459,12 +459,12 @@ namespace RemoteDesktop.Android.Core
             int v_idx_start = width * height + ((width * height) / 4);
             for (int rowCnt = 0; rowCnt < height; rowCnt++)
             {
-                for (int colCnt = 0; colCnt < width; colCnt+=2)
+                for (int colCnt = 0; colCnt < width; colCnt+=4)
                 {
-                    u = yuvBuffer[u_idx_start + colCnt];
-                    v = yuvBuffer[v_idx_start + colCnt];
+                    v = yuvBuffer[u_idx_start + colCnt];
+                    u = yuvBuffer[v_idx_start + colCnt];
 
-                    for (int cnt = 0; cnt < 2; cnt++)
+                    for (int cnt = 0; cnt < 4; cnt++)
                     {
                         y[cnt] = yuvBuffer[rowCnt * width + colCnt + cnt];
 
@@ -474,6 +474,12 @@ namespace RemoteDesktop.Android.Core
                         g = CLIP(g);
                         b = CONVERT_B(y[cnt], u);
                         b = CLIP(b);
+                        // r = y[cnt];
+                        // r = CLIP(r);
+                        // g = y[cnt];
+                        // g = CLIP(g);
+                        // b = y[cnt];
+                        // b = CLIP(b);
                         rgbBuffer[(rowCnt * width + colCnt) * 4 + 0] = (byte)r;
                         rgbBuffer[(rowCnt * width + colCnt) * 4 + 1] = (byte)g;
                         rgbBuffer[(rowCnt * width + colCnt) * 4 + 2] = (byte)b;
@@ -481,12 +487,61 @@ namespace RemoteDesktop.Android.Core
                     }
                 }
 
-                u_idx_start += (width / 2) * (rowCnt % 2);
-                v_idx_start += (width / 2) * (rowCnt % 2);
+                u_idx_start += (width / 4); //* (rowCnt % 2);
+                v_idx_start += (width / 4); // * (rowCnt % 2);
             }
             return rgbBuffer;
         }
 
+        public static byte[] YV12ToRGBA8888_3(byte[] yuvBuffer, int width, int height)
+        {
+            byte[] rgbBuffer = new byte[width * height * 4];
+            //sbyte[] yuvBufferSbyte = convertByteArrToSbyteArr(yuvBuffer);
+            int[] y = new int[] { 0, 0, 0, 0 };
+            int u = 0;
+            int v = 0;
+            int r = 0;
+            int g = 0;
+            int b = 0;
+            int u_idx_start = width * height;
+            int v_idx_start = width * height + ((width * height) / 4);
+            for (int rowCnt = 0; rowCnt < height; rowCnt++)
+            {
+                for (int colCnt = 0; colCnt < width; colCnt+=4)
+                {
+                    u = yuvBuffer[width * rowCnt + (int)(colCnt/4.0)];
+                    v = yuvBuffer[width * rowCnt + (int)(width/4.0) + (int)(colCnt/4.0)];
+
+                    for (int cnt = 0; cnt < 4; cnt++)
+                    {
+                        y[cnt] = yuvBuffer[rowCnt * width + colCnt + cnt];
+
+                        r = CONVERT_R(y[cnt], v);
+                        r = CLIP(r);
+                        g = CONVERT_G(y[cnt], u, v);
+                        g = CLIP(g);
+                        b = CONVERT_B(y[cnt], u);
+                        b = CLIP(b);
+                        // r = y[cnt];
+                        // r = CLIP(r);
+                        // g = y[cnt];
+                        // g = CLIP(g);
+                        // b = y[cnt];
+                        // b = CLIP(b);
+                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 0] = (byte)r;
+                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 1] = (byte)g;
+                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 2] = (byte)b;
+                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 3] = (byte)0xFF;
+                    }
+                }
+
+//                u_idx_start += (width / 4); //* (rowCnt % 2);
+//                v_idx_start += (width / 4); // * (rowCnt % 2);
+            }
+            return rgbBuffer;
+        }
+
+/*
         public static byte RYUVRGB24CI2V16_RANGECHECK_0TO255(int x) {
             return (byte)((((x) <= 255) && ((x) >= 0)) ? ((x)) : (((x) > 255) ? (255) : (0)));
          }
@@ -597,7 +652,7 @@ namespace RemoteDesktop.Android.Core
 
             return rgbBuffer;
         }
-
+*/
         //// for canvas setting is Argb8888
         public static byte[] convertBitmapBGR24toBGRA32(byte[] bitmap)
         {
