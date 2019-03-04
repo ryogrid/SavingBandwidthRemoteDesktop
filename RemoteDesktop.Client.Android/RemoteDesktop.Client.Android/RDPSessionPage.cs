@@ -21,7 +21,7 @@ namespace RemoteDesktop.Client.Android
     //    Stopped,
     //    Streaming,
     //    Paused
-    //}
+    //
 
     enum BITMAP_DISPLAY_COMPONENT_TAG
     {
@@ -69,6 +69,7 @@ namespace RemoteDesktop.Client.Android
 
         private int h264DecodedHeight = -1;
         private int h264DecodedWidth = -1;
+        private int h264DecodedPixFmt = -1;
 
         private int PC_SCREEN_X = 1920;
         private int PC_SCREEN_Y = 1080;
@@ -212,7 +213,14 @@ namespace RemoteDesktop.Client.Android
                 return;
             }
 
-            byte[] conved_bmp_data = Utils.NV12ToRGBA8888(bitmap_data, (int) original_width, (int) original_height);
+            byte[] conved_bmp_data;
+            if (h264DecodedPixFmt == 21) // yuv420 semi planar (nv12)
+            {
+                conved_bmp_data = Utils.NV12ToRGBA8888(bitmap_data, (int)original_width, (int)original_height);
+            }else if(h264DecodedPixFmt == 19) // yuv420 planar (yv12)
+            {
+                conved_bmp_data = Utils.YV12ToRGBA8888(bitmap_data, (int)original_width, (int)original_height);
+            }
 
             GCHandle gcHandle = GCHandle.Alloc(conved_bmp_data, GCHandleType.Pinned);
 
@@ -344,12 +352,13 @@ namespace RemoteDesktop.Client.Android
         }
 
 
-        private void H264DecodedDataHandler(byte[] decoded_data, int width, int height)
+        private void H264DecodedDataHandler(byte[] decoded_data, int width, int height, int pix_fmt)
         {
             Device.BeginInvokeOnMainThread(() =>
             {
                 h264DecodedWidth = width;
                 h264DecodedHeight = height;
+                h264DecodedPixFmt = pix_fmt;
                 if (curUpdateTargetComoonentOrBuf == BITMAP_DISPLAY_COMPONENT_TAG.COMPONENT_1)
                 {
                     skiaBufStreams[0].Write(decoded_data, 0, decoded_data.Length);

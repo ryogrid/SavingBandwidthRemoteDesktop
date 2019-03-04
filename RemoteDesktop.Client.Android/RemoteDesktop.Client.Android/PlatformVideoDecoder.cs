@@ -5,7 +5,7 @@ using Xamarin.Forms;
 
 namespace RemoteDesktop.Client.Android
 {
-    public delegate void DecodedBitmapHandler(byte[] decoded_data, int width, int height);
+    public delegate void DecodedBitmapHandler(byte[] decoded_data, int width, int height, int pix_fmt);
 
     public class DecoderCallback
     {
@@ -17,14 +17,14 @@ namespace RemoteDesktop.Client.Android
             mEncodedFrameQ = encoded_frame_q;
         }
 
-        public void OnDecodeFrame(byte[] frame_data, int width, int height)
+        public void OnDecodeFrame(byte[] frame_data, int width, int height, int pix_fmt)
         {
             Console.WriteLine("OnDecodeFrame callback called!");
             byte[] copied_buf = new byte[frame_data.Length];
             Array.Copy(frame_data, 0, copied_buf, 0, frame_data.Length);
             Device.BeginInvokeOnMainThread(() =>
             {
-                encodedDataGenerated(copied_buf, width, height);
+                encodedDataGenerated(copied_buf, width, height, pix_fmt);
             });
         }
 

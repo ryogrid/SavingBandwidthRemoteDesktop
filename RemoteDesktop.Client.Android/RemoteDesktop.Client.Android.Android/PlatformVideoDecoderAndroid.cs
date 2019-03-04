@@ -103,7 +103,7 @@ namespace RemoteDesktop.Client.Android.Droid
             Console.WriteLine("call OnDecodeFrame from decoder!");
 
             Console.WriteLine("bufferFormat.getInteger(MediaFormat.KeyWidth)=" + bufferFormat.GetInteger(MediaFormat.KeyWidth).ToString() + " bufferFormat.getInteger(MediaFormat.KeyHeight)=" + bufferFormat.GetInteger(MediaFormat.KeyHeight).ToString());
-            mCallbackObj.OnDecodeFrame(decoded_data, bufferFormat.GetInteger(MediaFormat.KeyWidth), bufferFormat.GetInteger(MediaFormat.KeyHeight));
+            mCallbackObj.OnDecodeFrame(decoded_data, bufferFormat.GetInteger(MediaFormat.KeyWidth), bufferFormat.GetInteger(MediaFormat.KeyHeight), bufferFormat.GetInteger(MediaFormat.KeyColorFormat));
         }
 
         override public void OnOutputFormatChanged(MediaCodec mc, MediaFormat format)
