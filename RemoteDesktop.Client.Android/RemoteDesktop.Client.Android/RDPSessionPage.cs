@@ -213,7 +213,7 @@ namespace RemoteDesktop.Client.Android
                 return;
             }
 
-            byte[] conved_bmp_data;
+            byte[] conved_bmp_data = null;
             if (h264DecodedPixFmt == 21) // yuv420 semi planar (nv12)
             {
                 conved_bmp_data = Utils.NV12ToRGBA8888(bitmap_data, (int)original_width, (int)original_height);
