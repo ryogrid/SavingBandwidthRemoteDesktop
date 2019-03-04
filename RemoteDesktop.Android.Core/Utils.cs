@@ -420,8 +420,8 @@ namespace RemoteDesktop.Android.Core
                 for (int colCnt = 0; colCnt < width; colCnt+=2)
                 {
 
-                    v = yuvBuffer[u_idx_start + (int)(colCnt/2.0)];
-                    u = yuvBuffer[v_idx_start + (int)(colCnt/2.0)];
+                    u = yuvBuffer[u_idx_start + (int)(colCnt/2.0)];
+                    v = yuvBuffer[v_idx_start + (int)(colCnt/2.0)];
 
                     for (int cnt = 0; cnt < 2; cnt++)
                     {
