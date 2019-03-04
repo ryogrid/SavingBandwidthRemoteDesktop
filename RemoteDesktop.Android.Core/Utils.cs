@@ -419,6 +419,7 @@ namespace RemoteDesktop.Android.Core
             {
                 for (int colCnt = 0; colCnt < width; colCnt+=2)
                 {
+
                     v = yuvBuffer[u_idx_start + (int)(colCnt/2.0)];
                     u = yuvBuffer[v_idx_start + (int)(colCnt/2.0)];
 
@@ -432,10 +433,10 @@ namespace RemoteDesktop.Android.Core
                         g = CLIP(g);
                         b = CONVERT_B(y[cnt], u);
                         b = CLIP(b);
-                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 0] = (byte)r;
-                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 1] = (byte)g;
-                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 2] = (byte)b;
-                        rgbBuffer[(rowCnt * width + colCnt) * 4 + 3] = (byte)0xFF;
+                        rgbBuffer[(rowCnt * width + colCnt + cnt) * 4 + 0] = (byte)r;
+                        rgbBuffer[(rowCnt * width + colCnt + cnt) * 4 + 1] = (byte)g;
+                        rgbBuffer[(rowCnt * width + colCnt + cnt) * 4 + 2] = (byte)b;
+                        rgbBuffer[(rowCnt * width + colCnt + cnt) * 4 + 3] = (byte)0xFF;
                     }
                 }
 
