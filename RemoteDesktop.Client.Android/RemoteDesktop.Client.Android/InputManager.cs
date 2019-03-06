@@ -13,11 +13,15 @@ namespace RemoteDesktop.Client.Android
         private DataSocket socket;
         private Xamarin.Forms.AbsoluteLayout layout;
         private ViewGestures tapViewGestures;
+        private Page rdpSessionPage;
+        private int internalCursorPosAppCanvasX = -1;
+        private int internalCursorPosAppCanvasY = -1;
 
-        public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout)
+        public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout, Page rdpSessionPage)
         {
             this.socket = socket;
             this.layout = layout;
+            this.rdpSessionPage = rdpSessionPage;
 
 			//var pressLabel = new Label
 			//{
@@ -87,7 +91,21 @@ namespace RemoteDesktop.Client.Android
                     inputUpdate(6); // right click
                 });
             };
-            
+            tapViewGestures.Drag += (s, e) =>
+            {
+                DragEventArgs moved = (DragEventArgs)e;
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    rdpSessionPage.DisplayAlert("", moved.DistanceX.ToString() + "," + moved.DistanceY.ToString(), "OK");
+                });
+/*                
+                Device.BeginInvokeOnMainThread(() => {
+                    Console.WriteLine("Long Tap!");
+
+                    inputUpdate(6); // right click
+                });
+*/
+            };
             //layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
         }
 
@@ -134,6 +152,12 @@ namespace RemoteDesktop.Client.Android
                 //if (mouseScrollCount == 0) mouseScroll = 0;
                 //else --mouseScrollCount;
             }
+        }
+
+        public void setCursorPosFromServer(int x, int y)
+        {
+            internalCursorPosAppCanvasX = x;
+            internalCursorPosAppCanvasY = y;
         }
     }
 }

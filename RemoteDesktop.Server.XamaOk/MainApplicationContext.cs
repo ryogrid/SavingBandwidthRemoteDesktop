@@ -310,7 +310,7 @@ namespace RemoteDesktop.Server
 				if (metaData.type == MetaDataTypes.UpdateSettings || metaData.type == MetaDataTypes.StartCapture)
 				{
                     format = System.Drawing.Imaging.PixelFormat.Format24bppRgb;
-                    screenIndex = metaData.screenIndex;
+                    //screenIndex = metaData.screenIndex;
 					compress = metaData.compressed;
 					resolutionScale = metaData.resolutionScale;
 					targetFPS = metaData.targetFPS;

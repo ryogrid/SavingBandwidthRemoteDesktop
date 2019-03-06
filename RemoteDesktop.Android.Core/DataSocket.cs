@@ -77,13 +77,15 @@ namespace RemoteDesktop.Android.Core
 		public MetaDataTypes type;
 		public bool compressed;
 		public int dataSize, imageDataSize;
-		public short width, height, screenWidth, screenHeight, screenIndex;
+        public short width, height, screenWidth, screenHeight;//, screenIndex;
 		public float resolutionScale;
 		public float targetFPS;
 
-		public short mouseX, mouseY; // mouseX is used as frame number (DEBUG)
-		public sbyte mouseScroll;
-		public byte mouseButtonPressed, keyCode, specialKeyCode;
+		public short mouseX, mouseY;
+        public byte mouseButtonPressed;
+
+		//public sbyte mouseScroll;
+		//public byte mouseButtonPressed, keyCode, specialKeyCode;
 	}
 
 	public class DataSocket : IDisposable
@@ -651,10 +653,10 @@ namespace RemoteDesktop.Android.Core
 					height = (short)bitmap.Height,
 					screenWidth = (short)screenWidth,
 					screenHeight = (short)screenHeight,
-					screenIndex = (short)screenIndex,
+					//screenIndex = (short)screenIndex,
 					//format = bitmap.PixelFormat,
-					targetFPS = targetFPS,
-                    mouseX = (short) frameNumber
+					targetFPS = targetFPS
+                    //mouseX = (short) frameNumber
 				};
                 frameNumber++;
 

@@ -71,8 +71,10 @@ namespace RemoteDesktop.Client.Android
         private int h264DecodedWidth = -1;
         private int h264DecodedPixFmt = -1;
 
-        private int PC_SCREEN_X = 1920;
-        private int PC_SCREEN_Y = 1080;
+        public int pcScreenWidth = -1;
+        public int pcScreenHeight = -1;
+        public int skiaCanvasWidth = -1;
+        public int skiaCanvasHeight = -1;
 
         private InputManager input;
 
@@ -97,7 +99,7 @@ namespace RemoteDesktop.Client.Android
                 Utils.setStdoutOff();
             }
 
-            if (GlobalConfiguration.isEnableImageStreaming)
+            if (GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController)
             {
                 canvas = new SKCanvasView
                 {
@@ -129,11 +131,11 @@ namespace RemoteDesktop.Client.Android
 
             socket = new DataSocket(NetworkTypes.Client);
 
-            if(GlobalConfiguration.isEnableSoundStreaming) connectToSoundServer(); // start recieve sound data which playing on remote PC
-            if(GlobalConfiguration.isEnableImageStreaming) connectToImageServer(); // staart recieve captured bitmap image data
+            if(GlobalConfiguration.isEnableSoundStreaming && !GlobalConfiguration.isClientRunWithoutConn) connectToSoundServer(); // start recieve sound data which playing on remote PC
+            if(GlobalConfiguration.isEnableImageStreaming && !GlobalConfiguration.isClientRunWithoutConn) connectToImageServer(); // staart recieve captured bitmap image data
             if(GlobalConfiguration.isEnableInputDeviceController) connectToInputServer();
 
-            if (GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController)
+            if ((GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController) && !GlobalConfiguration.isClientRunWithoutConn)
             {
                 socket.ConnectedCallback += Socket_ConnectedCallback;
                 socket.DisconnectedCallback += Socket_DisconnectedCallback;
@@ -152,6 +154,12 @@ namespace RemoteDesktop.Client.Android
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;
             SKCanvas canvas = surface.Canvas;
+
+            if(skiaCanvasWidth == -1)
+            {
+                skiaCanvasWidth = info.Width;
+                skiaCanvasHeight = info.Height;
+            }
 
             float original_height = -1;
             float original_width = -1;
@@ -300,7 +308,7 @@ namespace RemoteDesktop.Client.Android
 
             RDPSessionPage.width = (int)width;
             RDPSessionPage.height = (int)height;
-            if (GlobalConfiguration.isEnableImageStreaming)
+            if (GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController)
             {
                 addBitmatDisplayComponentToLayout();
             }
@@ -320,7 +328,7 @@ namespace RemoteDesktop.Client.Android
         {
             // handle connect
             //SetConnectionUIStates(UIStates.Streaming);
-            input = new InputManager(socket, layout);
+            input = new InputManager(socket, layout, this);
 /*
             socket = new DataSocket(NetworkTypes.Client);
             socket.ConnectedCallback += Socket_ConnectedCallback;
@@ -371,11 +379,12 @@ namespace RemoteDesktop.Client.Android
                 dataUpdateTargetImageComponentToggle();
             });
         }
-
+/*
         private void setNewBitmapDisplayComponentAndBitmap(BITMAP_DISPLAY_COMPONENT_TAG tag)
         {
             layout.Children.Add(canvas, new Rectangle(0, 0, width, height));
         }
+*/
 
         //private void displayComponentOrBufferToggle()
         //{
@@ -406,7 +415,7 @@ namespace RemoteDesktop.Client.Android
             if (metaData.type != MetaDataTypes.ImageData) throw new Exception("Invalid meta data type: " + metaData.type);
 
             Console.WriteLine("recieved MetaData @ StartDataRecievedCallback");
-            Console.WriteLine("double_image: frameNumber=" + metaData.mouseX.ToString());
+            //Console.WriteLine("double_image: frameNumber=" + metaData.mouseX.ToString());
 
             // 先に行われたImageコンポーネントへの更新通知によるImageコンポーネントの表示の更新が完了していない
             // 可能性があるので少し待つ
@@ -423,6 +432,11 @@ namespace RemoteDesktop.Client.Android
                 lock (this)
                 {
                     this.metaData = metaData;
+                    if(pcScreenWidth == -1)
+                    {
+                        pcScreenWidth = metaData.screenWidth;
+                        pcScreenHeight = metaData.screenHeight;
+                    }
 
                     if (isAppDisplaySizeGot == false)
                     {
@@ -682,7 +696,7 @@ namespace RemoteDesktop.Client.Android
                 //compressed = false,
                 compressed = true,
                 resolutionScale = .5f, //.3f,
-                screenIndex = 0,
+                //screenIndex = 0,
                 targetFPS = 1.0f,
                 dataSize = -1
             };
