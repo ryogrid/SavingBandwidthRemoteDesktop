@@ -48,7 +48,7 @@ namespace RemoteDesktop.Client.Android
                 Device.BeginInvokeOnMainThread(() => {
                     Console.WriteLine("Swipe!");
 
-                    inputUpdate(1); //UP
+                    inputUpdate(1, -1, -1); //UP
                 });
             };
             tapViewGestures.SwipeLeft += (s, e) =>
@@ -56,7 +56,7 @@ namespace RemoteDesktop.Client.Android
                 Device.BeginInvokeOnMainThread(() => {
                     Console.WriteLine("Swipe!");
 
-                    inputUpdate(2); //DOWN
+                    inputUpdate(2, -1, -1); //DOWN
                 });
             };
             tapViewGestures.SwipeUp += (s, e) =>
@@ -64,7 +64,7 @@ namespace RemoteDesktop.Client.Android
                 Device.BeginInvokeOnMainThread(() => {
                     Console.WriteLine("Swipe!");
 
-                    inputUpdate(3); //LEFT
+                    inputUpdate(3, -1, -1); //LEFT
                 });
             };
             tapViewGestures.SwipeDown += (s, e) =>
@@ -72,7 +72,7 @@ namespace RemoteDesktop.Client.Android
                 Device.BeginInvokeOnMainThread(() => {
                     Console.WriteLine("Swipe!");
 
-                    inputUpdate(4); //RIGHT
+                    inputUpdate(4, -1, -1); //RIGHT
                 });
             };
             tapViewGestures.Tap += (s, e) =>
@@ -80,7 +80,7 @@ namespace RemoteDesktop.Client.Android
                 Device.BeginInvokeOnMainThread(() => {
                     Console.WriteLine("Tap!");
 
-                    inputUpdate(5); // left click
+                    inputUpdate(5, -1, -1); // left click
                 });
             };
             tapViewGestures.LongTap += (s, e) =>
@@ -88,23 +88,26 @@ namespace RemoteDesktop.Client.Android
                 Device.BeginInvokeOnMainThread(() => {
                     Console.WriteLine("Long Tap!");
 
-                    inputUpdate(6); // right click
+                    inputUpdate(6, -1, -1); // right click
                 });
             };
             tapViewGestures.Drag += (s, e) =>
             {
+
                 DragEventArgs moved = (DragEventArgs)e;
+/*
                 Device.BeginInvokeOnMainThread(() =>
                 {
                     rdpSessionPage.DisplayAlert("", moved.DistanceX.ToString() + "," + moved.DistanceY.ToString(), "OK");
                 });
-/*                
-                Device.BeginInvokeOnMainThread(() => {
-                    Console.WriteLine("Long Tap!");
-
-                    inputUpdate(6); // right click
-                });
 */
+
+                Device.BeginInvokeOnMainThread(() => {
+                    Console.WriteLine("Drag!");
+
+                    inputUpdate(7, (int)moved.DistanceX, (int)moved.DistanceY); // Drag
+                });
+
             };
             //layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
         }
@@ -117,9 +120,8 @@ namespace RemoteDesktop.Client.Android
             });
         }
 //        private void inputUpdate(object state)
-        private void inputUpdate(int code)
+        private void inputUpdate(int code, int x, int y)
         {
-
             lock (this)
             {
                 //if (!mouseUpdate) return;
@@ -137,6 +139,29 @@ namespace RemoteDesktop.Client.Android
                     return;
                 }
                 Console.WriteLine("inputUpdate: skiaCanvasWidth is OK. so start prrocessing input information.");
+
+                if(internalCursorPosAppCanvasX == -1)
+                {
+                    internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth / 2;
+                    internalCursorPosAppCanvasY = rdpSessionPage.skiaCanvasHeight / 2;
+                }
+
+                if(code == 7) // drag
+                {
+                    internalCursorPosAppCanvasX += x;
+                    internalCursorPosAppCanvasY += y;
+                    if (internalCursorPosAppCanvasX < 0) internalCursorPosAppCanvasX = 0;
+                    if (internalCursorPosAppCanvasX > rdpSessionPage.skiaCanvasWidth) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth;
+                    if (internalCursorPosAppCanvasY < 0) internalCursorPosAppCanvasY = 0;
+                    if (internalCursorPosAppCanvasY > rdpSessionPage.skiaCanvasHeight) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasHeight;
+/*
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        rdpSessionPage.DisplayAlert("", internalCursorPosAppCanvasX.ToString() + "," + internalCursorPosAppCanvasY.ToString(), "OK");
+                    });]
+*/
+                    return;
+                }
 
                 var task = Task.Run(() =>
                 {
@@ -169,6 +194,18 @@ namespace RemoteDesktop.Client.Android
         {
             internalCursorPosAppCanvasX = x;
             internalCursorPosAppCanvasY = y;
+        }
+
+        public int[] getCursorInternalCursorPos()
+        {
+            if (internalCursorPosAppCanvasX == -1)
+            {
+                return null;
+            }
+            int[] ret = new int[2];
+            ret[0] = internalCursorPosAppCanvasX;
+            ret[1] = internalCursorPosAppCanvasY;
+            return ret;
         }
     }
 }
