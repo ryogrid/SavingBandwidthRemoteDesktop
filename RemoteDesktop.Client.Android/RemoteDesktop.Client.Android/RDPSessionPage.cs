@@ -59,7 +59,7 @@ namespace RemoteDesktop.Client.Android
         private int totalDisplayedFrames = 0;
 //        private bool isBitDisplayCompOrBufInited = false;
 
-        private SKCanvasView canvas = null;
+        public SKCanvasView canvas = null;
         private MemoryStream[] skiaBufStreams;
 
         private VideoDecoderManager vdecoder = null;
@@ -159,6 +159,7 @@ namespace RemoteDesktop.Client.Android
             {
                 skiaCanvasWidth = info.Width;
                 skiaCanvasHeight = info.Height;
+                return; //一回目は空打ちなのでreturnする
             }
 
             float original_height = -1;

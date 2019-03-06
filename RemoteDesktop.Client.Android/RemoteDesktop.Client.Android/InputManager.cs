@@ -13,11 +13,11 @@ namespace RemoteDesktop.Client.Android
         private DataSocket socket;
         private Xamarin.Forms.AbsoluteLayout layout;
         private ViewGestures tapViewGestures;
-        private Page rdpSessionPage;
+        private RDPSessionPage rdpSessionPage;
         private int internalCursorPosAppCanvasX = -1;
         private int internalCursorPosAppCanvasY = -1;
 
-        public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout, Page rdpSessionPage)
+        public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout, RDPSessionPage rdpSessionPage)
         {
             this.socket = socket;
             this.layout = layout;
@@ -126,6 +126,17 @@ namespace RemoteDesktop.Client.Android
                 //mouseUpdate = false;
 
                 //if (connectedToLocalPC || isDisposed || uiState != UIStates.Streaming || socket == null || bitmap == null) return;
+
+                if(rdpSessionPage.skiaCanvasWidth == -1)
+                {
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        rdpSessionPage.canvas.InvalidateSurface();
+                    });
+                    // skia canvas のサイズを得てから処理したいので、returnする
+                    return;
+                }
+                Console.WriteLine("inputUpdate: skiaCanvasWidth is OK. so start prrocessing input information.");
 
                 var task = Task.Run(() =>
                 {
