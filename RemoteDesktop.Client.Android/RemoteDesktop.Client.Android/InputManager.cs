@@ -148,12 +148,18 @@ namespace RemoteDesktop.Client.Android
 
                 if(code == 7) // drag
                 {
-                    internalCursorPosAppCanvasX += x;
-                    internalCursorPosAppCanvasY += y;
+                    internalCursorPosAppCanvasX += (int)(x/3.0);
+                    internalCursorPosAppCanvasY += (int)(y/3.0);
                     if (internalCursorPosAppCanvasX < 0) internalCursorPosAppCanvasX = 0;
                     if (internalCursorPosAppCanvasX > rdpSessionPage.skiaCanvasWidth) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth;
                     if (internalCursorPosAppCanvasY < 0) internalCursorPosAppCanvasY = 0;
                     if (internalCursorPosAppCanvasY > rdpSessionPage.skiaCanvasHeight) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasHeight;
+
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        rdpSessionPage.canvas.InvalidateSurface();
+                    });
+
 /*
                     Device.BeginInvokeOnMainThread(() =>
                     {
