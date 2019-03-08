@@ -81,7 +81,7 @@ namespace RemoteDesktop.Client.Android
                 long diff = cur - lastTapAtUnixTime;
                 lastTapAtUnixTime = cur;
                  Console.WriteLine("Tap_diff {0}", diff);
-                if (diff <= 4) //短い間隔でタップが複数回行われていた場合
+                if (diff <= 2) //短い間隔でタップが複数回行われていた場合
                 {
                     Task.Run(() =>
                     {

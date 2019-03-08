@@ -349,7 +349,7 @@ namespace RemoteDesktop.Client.Android
             //Imageコンポーネントの差し替えにともなってバッファアドレスが変わるかもしれないので
             //待つ
             var tcs = new TaskCompletionSource<bool>();
-            Task.Run(() =>
+            Device.BeginInvokeOnMainThread(() =>
             {
                 lock (this)
                 {
@@ -402,7 +402,7 @@ namespace RemoteDesktop.Client.Android
         {
             //Utils.startTimeMeasure("Image_Update");
             //var tcs = new TaskCompletionSource<bool>();
-            Task.Run(() =>
+            Device.BeginInvokeOnMainThread(() =>
             {
                 lock (this)
                 {
@@ -508,7 +508,7 @@ namespace RemoteDesktop.Client.Android
             //var tcs = new TaskCompletionSource<bool>();
             byte[] local_buf = new byte[dataSize];
             Array.Copy(data, 0, local_buf, 0, dataSize);
-            Task.Run(() =>
+            Device.BeginInvokeOnMainThread(() =>
             {
                 lock (this)
                 {
