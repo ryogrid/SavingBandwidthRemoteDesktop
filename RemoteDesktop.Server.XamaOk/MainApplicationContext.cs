@@ -335,7 +335,7 @@ namespace RemoteDesktop.Server
                 {
                     case MouseInteractionType.POSITION_SET:
                         int x = metaData.mouseX;
-                        int y = metaData.mouseY;
+                        int y = metaData.mouseY - GlobalConfiguration.cursorPosHosseiY;
                         if (x < 0) x = 0;
                         if (x > screenRect.Width) x = screenRect.Width;
                         if (y < 0) y = 0;

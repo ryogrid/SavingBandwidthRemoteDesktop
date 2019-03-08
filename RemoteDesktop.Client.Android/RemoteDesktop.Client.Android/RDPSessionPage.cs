@@ -84,16 +84,6 @@ namespace RemoteDesktop.Client.Android
 
             //InitializeComponent();
 
-
-            //gr.Tapped += (s, e) =>
-            //{
-            //    Device.BeginInvokeOnMainThread(() =>
-            //    {
-
-            //    });
-            //    //DisplayAlert("", "Tap", "OK");
-            //};
-            //image.GestureRecognizers.Add(gr);
             if (GlobalConfiguration.isStdOutOff)
             {
                 Utils.setStdoutOff();
@@ -118,22 +108,10 @@ namespace RemoteDesktop.Client.Android
             layout = new AbsoluteLayout();
             Content = layout;
 
-            ////settingsOverlay.ApplyCallback += SettingsOverlay_ApplyCallback;
-            //SetConnectionUIStates(uiState);
-            //inputTimer = new Timer(InputUpdate, null, 1000, 1000 / 15);
-            //image.MouseMove += Image_MouseMove;
-            //image.MouseDown += Image_MousePress;
-            //image.MouseUp += Image_MousePress;
-            ////image.MouseWheel += Image_MouseWheel;
-            ////KeyDown += Window_KeyDown;
-
-            //Utils.getLocalIP();
-
             socket = new DataSocket(NetworkTypes.Client);
 
             if (GlobalConfiguration.isEnableSoundStreaming && !GlobalConfiguration.isClientRunWithoutConn) connectToSoundServer(); // start recieve sound data which playing on remote PC
-            if (GlobalConfiguration.isEnableImageStreaming && !GlobalConfiguration.isClientRunWithoutConn) connectToImageServer(); // staart recieve captured bitmap image data
-            if (GlobalConfiguration.isEnableInputDeviceController) connectToInputServer();
+            if (GlobalConfiguration.isEnableInputDeviceController) setupInputManager();
 
             if ((GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController) && !GlobalConfiguration.isClientRunWithoutConn)
             {
@@ -248,13 +226,11 @@ namespace RemoteDesktop.Client.Android
                     if ((xy_arr = input.getCursorInternalCursorPos()) != null)
                     {
                         Console.WriteLine("Draw dummy cursor!");
-                        //SKPoint cursor = new SKPoint(xy_arr[0], xy_arr[1]);
                         var paint = new SKPaint
                         {
                             Color = new SKColor(255, 0, 0),
                             Style = SKPaintStyle.Fill
                         };
-                        //canvas.Clear();
                         canvas.DrawCircle(xy_arr[0], xy_arr[1], 10.0f, paint);
                     }
                 }
@@ -282,7 +258,6 @@ namespace RemoteDesktop.Client.Android
                 {
                     if (socket != null) socket.Dispose();
                     socket = null;
-                    //SetConnectionUIStates(UIStates.Stopped);
                 });
             }
             if (vdecoder != null)
@@ -320,7 +295,7 @@ namespace RemoteDesktop.Client.Android
 
             RDPSessionPage.width = (int)width;
             RDPSessionPage.height = (int)height;
-            if (GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController)
+            if ((GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController) && !isAppDisplaySizeGot)
             {
                 addBitmatDisplayComponentToLayout();
             }
@@ -332,46 +307,11 @@ namespace RemoteDesktop.Client.Android
             this.isAppDisplaySizeGot = true;
         }
 
-        //private void SetConnectionUIStates(UIStates state)
-        //{
-        //    uiState = state;
-        //}
-
-        private void connectToInputServer()
+        private void setupInputManager()
         {
             // handle connect
-            //SetConnectionUIStates(UIStates.Streaming);
             input = new InputManager(socket, layout, this);
-            /*
-                        socket = new DataSocket(NetworkTypes.Client);
-                        socket.ConnectedCallback += Socket_ConnectedCallback;
-                        socket.DisconnectedCallback += Socket_DisconnectedCallback;
-                        socket.ConnectionFailedCallback += Socket_ConnectionFailedCallback;
-                        socket.DataRecievedCallback += Socket_DataRecievedCallback;
-                        socket.StartDataRecievedCallback += Socket_StartDataRecievedCallback;
-                        socket.EndDataRecievedCallback += Socket_EndDataRecievedCallback;
-                        //socket.Connect(host.endpoints[0]);
-                        socket.Connect(IPAddress.Parse(GlobalConfiguration.ServerAddress), GlobalConfiguration.ImageServerPort);
-            */
         }
-
-        private void connectToImageServer()
-        {
-            // handle connect
-            //SetConnectionUIStates(UIStates.Streaming);
-            /*
-                        socket = new DataSocket(NetworkTypes.Client);
-                        socket.ConnectedCallback += Socket_ConnectedCallback;
-                        socket.DisconnectedCallback += Socket_DisconnectedCallback;
-                        socket.ConnectionFailedCallback += Socket_ConnectionFailedCallback;
-                        socket.DataRecievedCallback += Socket_DataRecievedCallback;
-                        socket.StartDataRecievedCallback += Socket_StartDataRecievedCallback;
-                        socket.EndDataRecievedCallback += Socket_EndDataRecievedCallback;
-                        //socket.Connect(host.endpoints[0]);
-                        socket.Connect(IPAddress.Parse(GlobalConfiguration.ServerAddress), GlobalConfiguration.ImageServerPort);
-            */
-        }
-
 
         private void H264DecodedDataHandler(byte[] decoded_data, int width, int height, int pix_fmt)
         {
@@ -392,17 +332,7 @@ namespace RemoteDesktop.Client.Android
                 dataUpdateTargetImageComponentToggle();
             });
         }
-        /*
-                private void setNewBitmapDisplayComponentAndBitmap(BITMAP_DISPLAY_COMPONENT_TAG tag)
-                {
-                    layout.Children.Add(canvas, new Rectangle(0, 0, width, height));
-                }
-        */
 
-        //private void displayComponentOrBufferToggle()
-        //{
-        //    // do nothing
-        //}
 
         // Imageコンポーネントへのデータ更新通知もここで行う
         private void dataUpdateTargetImageComponentToggle()
@@ -428,14 +358,6 @@ namespace RemoteDesktop.Client.Android
             if (metaData.type != MetaDataTypes.ImageData) throw new Exception("Invalid meta data type: " + metaData.type);
 
             Console.WriteLine("recieved MetaData @ StartDataRecievedCallback");
-            //Console.WriteLine("double_image: frameNumber=" + metaData.mouseX.ToString());
-
-            // 先に行われたImageコンポーネントへの更新通知によるImageコンポーネントの表示の更新が完了していない
-            // 可能性があるので少し待つ
-            //Thread.Sleep(200); 
-
-            //DEBUG
-            //if (GlobalConfiguration.isEnableInputDeviceController) return;
 
             //Imageコンポーネントの差し替えにともなってバッファアドレスが変わるかもしれないので
             //待つ
@@ -456,33 +378,8 @@ namespace RemoteDesktop.Client.Android
                         return;
                     }
 
-                    /*
-                                        if (isAppDisplaySizeGot && (isBitDisplayComponetsAdded == false))
-                                        {
-                                            addBitmatDisplayComponentToLayout();
-                                            curUpdateTargetComoonentOrBuf = BITMAP_DISPLAY_COMPONENT_TAG.COMPONENT_2;
-                                            //isBitDisplayComponetsAdded = true;
-                                        }
-
-                    */
-
                     try
                     {
-                        /*
-                                                // create bitmap
-                                                if (isBitDisplayCompOrBufInited == false)
-                                                {
-                                                    //setNewBitmapDisplayComponentAndBitmap(BITMAP_DISPLAY_COMPONENT_TAG.COMPONENT_1);
-                                                    //setNewBitmapDisplayComponentAndBitmap(BITMAP_DISPLAY_COMPONENT_TAG.COMPONENT_2);
-
-                                                    curUpdateTargetComoonentOrBuf = BITMAP_DISPLAY_COMPONENT_TAG.COMPONENT_2;
-                                                    isBitDisplayCompOrBufInited = true;
-                                                }
-                        */
-                        //if (isBitDisplayComponetsAdded)
-                        //{
-                        //    displayComponentOrBufferToggle(); // 直前のデータ受信でデータを更新したデータもしくは、それに対応するImageコンポーネントを表示させる
-                        //}
 
                         // init compression
                         if (metaData.compressed || GlobalConfiguration.isStreamRawH264Data)
@@ -514,7 +411,6 @@ namespace RemoteDesktop.Client.Android
             catch { }
         }
 
-        //private unsafe void Socket_EndDataRecievedCallback()
         private void Socket_EndDataRecievedCallback()
         {
             //Utils.startTimeMeasure("Image_Update");
@@ -526,22 +422,9 @@ namespace RemoteDesktop.Client.Android
                     Console.WriteLine("elapsed for image data transfer communication: " + Utils.stopMeasureAndGetElapsedMilliSeconds("Image_Transfer_Communication").ToString() + " msec");
                     try
                     {
-                        //if (RTPConfiguration.isSendAnAviContent){
-                        //    Utils.startTimeMeasure("H264_avi_file_decompress");
-
-                        //    vdecoder = new VideoDecoderManager();
-                        //    vdecoder.setup(new DecoderCallback());
-                        //    Console.WriteLine("elapsed for h264 avi file decompress: " + Utils.stopMeasureAndGetElapsedMilliSeconds("H264_avi_file_decompress").ToString() + " msec");
-
-                        //} else 
 
                         if (GlobalConfiguration.isStreamRawH264Data)
                         {
-                            //Utils.startTimeMeasure("H264_a_frame_decompress");
-
-                            // TODO: need implement
-
-                            //vdecoder.addEncodedFrame(compressedStream.ToArray());
                             byte[] encoded_buf = compressedStream.ToArray();
                             Console.Write("pass encoded data to decoder length = " + encoded_buf.Length.ToString());
 
@@ -560,18 +443,6 @@ namespace RemoteDesktop.Client.Android
                                 vdecoder.setup(decoCallback, (int)metaData.width, (int)metaData.height);
                             }
 
-                            // block until get decoded frame
-                            //byte[] decoded_bitmap = vdecoder.getDecodedFrame();
-                            //if (curUpdateTargetComoonentOrBuf == BITMAP_DISPLAY_COMPONENT_TAG.COMPONENT_1)
-                            //{
-                            //    skiaBufStreams[0].Write(decoded_bitmap, 0, metaData.imageDataSize);
-                            //}
-                            //else
-                            //{
-                            //    skiaBufStreams[1].Write(decoded_bitmap, 0, metaData.imageDataSize);
-                            //}
-
-                            //Console.WriteLine("elapsed for h264 one frame decompress: " + Utils.stopMeasureAndGetElapsedMilliSeconds("H264_a_frame_decompress").ToString() + " msec");
                             return;
                         }
                         else if (GlobalConfiguration.isConvJpeg)
@@ -696,8 +567,6 @@ namespace RemoteDesktop.Client.Android
             {
                 socket.Dispose();
                 socket = null;
-
-                //SetConnectionUIStates(UIStates.Stopped);
             });
         }
 
@@ -727,12 +596,6 @@ namespace RemoteDesktop.Client.Android
         private void Socket_DisconnectedCallback()
         {
             DisposePageHavingResources();
-            //Device.BeginInvokeOnMainThread(() =>
-            //{
-            //    socket.Dispose();
-            //    socket = null;
-            //    SetConnectionUIStates(UIStates.Stopped);
-            //});
         }
 
         //protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -745,82 +608,6 @@ namespace RemoteDesktop.Client.Android
         //{
         //    skipImageUpdate = true;
         //    base.OnLocationChanged(e);
-        //}
-
-        /*
-                private void InputUpdate(object state)
-                {
-
-                    lock (this)
-                    {
-                        //if (!mouseUpdate) return;
-                        //mouseUpdate = false;
-
-                        //if (connectedToLocalPC || isDisposed || uiState != UIStates.Streaming || socket == null || bitmap == null) return;
-
-                        var task = Task.Run(() =>
-                        {
-                            //if (isDisposed || uiState != UIStates.Streaming || socket == null || bitmap == null) return;
-
-                            var metaData = new MetaData()
-                            {
-                                type = MetaDataTypes.UpdateMouse,
-                                mouseX = (short)((mousePoint.X / image.ActualWidth) * this.metaData.screenWidth),
-                                mouseY = (short)((mousePoint.Y / image.ActualHeight) * this.metaData.screenHeight),
-                                mouseScroll = mouseScroll,
-                                mouseButtonPressed = inputMouseButtonPressed,
-                                dataSize = -1
-                            };
-
-                            socket.SendMetaData(metaData);
-                        });
-
-                        //if (mouseScrollCount == 0) mouseScroll = 0;
-                        //else --mouseScrollCount;
-                    }
-                }
-        */
-
-        //private void ApplyCommonMouseEvent(MouseEventArgs e)
-        //{
-        //    mousePoint = e.GetPosition(image);
-        //    inputMouseButtonPressed = 0;
-        //    if (e.LeftButton == MouseButtonState.Pressed) inputMouseButtonPressed = 1;
-        //    else if (e.RightButton == MouseButtonState.Pressed) inputMouseButtonPressed = 2;
-        //    else if (e.MiddleButton == MouseButtonState.Pressed) inputMouseButtonPressed = 3;
-        //}
-
-        //private void Image_MouseMove(object sender, MouseEventArgs e)
-        //{
-        //    lock (this)
-        //    {
-        //        ApplyCommonMouseEvent(e);
-        //        mouseScroll = 0;
-        //        mouseScrollCount = 0;
-        //        mouseUpdate = true;
-        //    }
-        //}
-
-        //private void Image_MousePress(object sender, MouseButtonEventArgs e)
-        //{
-        //    lock (this)
-        //    {
-        //        ApplyCommonMouseEvent(e);
-        //        mouseScroll = 0;
-        //        mouseScrollCount = 0;
-        //        mouseUpdate = true;
-        //    }
-        //}
-
-        //private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
-        //{
-        //    lock (this)
-        //    {
-        //        ApplyCommonMouseEvent(e);
-        //        mouseScroll = (sbyte)(e.Delta / 120);
-        //        ++mouseScrollCount;
-        //        mouseUpdate = true;
-        //    }
         //}
 
         //private void Window_KeyDown(object sender, KeyEventArgs e)

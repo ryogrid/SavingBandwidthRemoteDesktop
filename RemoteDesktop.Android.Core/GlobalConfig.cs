@@ -81,6 +81,8 @@ namespace RemoteDesktop.Android.Core
         public static bool isEnableSoundStreaming = false;
         public static bool isEnableInputDeviceController = true;
 
+        public static int cursorPosHosseiY = 36;
+
         // for 流用元コード. Xamarin対応版では利用されない
         public String FileName = "";
         public String localAddress = "";
