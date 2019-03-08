@@ -120,14 +120,11 @@ namespace RemoteDesktop.Client.Android
                 });
             };
 
-
             tapViewGestures.TouchBegan += (s, e) =>
             {
                 orgPosXDragStart = int.MaxValue;
                 orgPosYDragStart = int.MaxValue;
             };
-
-
         }
 
         // called from UI thread
@@ -138,7 +135,7 @@ namespace RemoteDesktop.Client.Android
                 layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
             });
         }
-        //        private void inputUpdate(object state)
+
         private void inputUpdate(MouseInteractionType code, int x, int y)
         {
             lock (this)

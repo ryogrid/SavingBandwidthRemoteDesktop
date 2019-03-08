@@ -16,12 +16,6 @@ using RemoteDesktop.Android.Core;
 
 namespace RemoteDesktop.Client.Android
 {
-    //enum UIStates
-    //{
-    //    Stopped,
-    //    Streaming,
-    //    Paused
-    //
 
     enum BITMAP_DISPLAY_COMPONENT_TAG
     {
@@ -38,14 +32,6 @@ namespace RemoteDesktop.Client.Android
         private MetaData metaData;
         private MemoryStream compressedStream;
         private bool isDisposed;
-        //private UIStates uiState = UIStates.Stopped;
-
-        //private Timer inputTimer;
-        //private bool mouseUpdate;
-        private Point mousePoint;
-        private sbyte mouseScroll;
-        private byte mouseScrollCount = 0;
-        private byte inputMouseButtonPressed = 0;
 
         public static int width = 432; // dp based app display area size is set
         public static int height = 708; // dp based app display area size is set
@@ -57,7 +43,6 @@ namespace RemoteDesktop.Client.Android
         private bool isAppDisplaySizeGot = false;
         private bool isBitDisplayComponetsAdded = false;
         private int totalDisplayedFrames = 0;
-        //        private bool isBitDisplayCompOrBufInited = false;
 
         public SKCanvasView canvas = null;
         private MemoryStream[] skiaBufStreams;
@@ -121,7 +106,6 @@ namespace RemoteDesktop.Client.Android
                 socket.DataRecievedCallback += Socket_DataRecievedCallback;
                 socket.StartDataRecievedCallback += Socket_StartDataRecievedCallback;
                 socket.EndDataRecievedCallback += Socket_EndDataRecievedCallback;
-                // DEBUG: comment-out
                 socket.Connect(IPAddress.Parse(GlobalConfiguration.ServerAddress), GlobalConfiguration.ImageAndInputServerPort);
             }
 
@@ -315,7 +299,7 @@ namespace RemoteDesktop.Client.Android
 
         private void H264DecodedDataHandler(byte[] decoded_data, int width, int height, int pix_fmt)
         {
-            Device.BeginInvokeOnMainThread(() =>
+            Task.Run(() =>
             {
                 h264DecodedWidth = width;
                 h264DecodedHeight = height;
@@ -350,7 +334,10 @@ namespace RemoteDesktop.Client.Android
             }
             Console.WriteLine("double_image: call canvas.InvalidateSurface");
 
-            canvas.InvalidateSurface();
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                canvas.InvalidateSurface();
+            });
         }
 
         private void Socket_StartDataRecievedCallback(MetaData metaData)
@@ -362,7 +349,7 @@ namespace RemoteDesktop.Client.Android
             //Imageコンポーネントの差し替えにともなってバッファアドレスが変わるかもしれないので
             //待つ
             var tcs = new TaskCompletionSource<bool>();
-            Device.BeginInvokeOnMainThread(() =>
+            Task.Run(() =>
             {
                 lock (this)
                 {
@@ -415,7 +402,7 @@ namespace RemoteDesktop.Client.Android
         {
             //Utils.startTimeMeasure("Image_Update");
             //var tcs = new TaskCompletionSource<bool>();
-            Device.BeginInvokeOnMainThread(() =>
+            Task.Run(() =>
             {
                 lock (this)
                 {
@@ -521,7 +508,7 @@ namespace RemoteDesktop.Client.Android
             //var tcs = new TaskCompletionSource<bool>();
             byte[] local_buf = new byte[dataSize];
             Array.Copy(data, 0, local_buf, 0, dataSize);
-            Device.BeginInvokeOnMainThread(() =>
+            Task.Run(() =>
             {
                 lock (this)
                 {
@@ -563,7 +550,7 @@ namespace RemoteDesktop.Client.Android
 
         private void Socket_ConnectionFailedCallback(string error)
         {
-            Device.BeginInvokeOnMainThread(() =>
+            Task.Run(() =>
             {
                 socket.Dispose();
                 socket = null;

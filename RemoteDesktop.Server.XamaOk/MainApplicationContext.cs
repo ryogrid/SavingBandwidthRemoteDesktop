@@ -31,9 +31,7 @@ namespace RemoteDesktop.Server
 		private Rectangle screenRect;
 		private Bitmap bitmap, scaledBitmap;
 		private Graphics graphics, scaledGraphics;
-        //System.Drawing.Imaging.PixelFormat format = System.Drawing.Imaging.PixelFormat.Format16bppRgb565;
         System.Drawing.Imaging.PixelFormat format = System.Drawing.Imaging.PixelFormat.Format24bppRgb;
-        //System.Drawing.Imaging.PixelFormat format = System.Drawing.Imaging.PixelFormat.Format32bppRgb;
         int screenIndex, currentScreenIndex;
         float targetFPS = 1.0f;
         float fixedTargetFPS = 1.0f; //400.0f;
@@ -47,7 +45,6 @@ namespace RemoteDesktop.Server
 
 		private InputSimulator input;
         private bool receivedMetaData = false;
-		private byte inputLastMouseState;
         private CaptureSoundStreamer cap_streamer;
 
         private ExtractedH264Encoder encoder;
