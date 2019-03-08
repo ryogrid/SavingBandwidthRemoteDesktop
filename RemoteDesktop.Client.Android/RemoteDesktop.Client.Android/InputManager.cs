@@ -19,6 +19,7 @@ namespace RemoteDesktop.Client.Android
         public bool isAddedGestureViewLayer = false;
         private int orgPosXDragStart = int.MaxValue;
         private int orgPosYDragStart = int.MaxValue;
+        private long lastTapAtUnixTime = 0;
 
         public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout, RDPSessionPage rdpSessionPage)
         {
@@ -34,6 +35,7 @@ namespace RemoteDesktop.Client.Android
                 VerticalOptions = LayoutOptions.Fill
             };
 
+
 /*
             tapViewGestures.SwipeRight += (s, e) =>
             {
@@ -41,9 +43,10 @@ namespace RemoteDesktop.Client.Android
                 {
                     Console.WriteLine("Swipe!");
 
-                    inputUpdate(1, -1, -1); //UP
+                    inputUpdate(MouseInteractionType.LEFT_DOUBLE_CLICK, -1, -1);
                 });
             };
+
             tapViewGestures.SwipeLeft += (s, e) =>
             {
                 Device.BeginInvokeOnMainThread(() =>
@@ -74,16 +77,32 @@ namespace RemoteDesktop.Client.Android
 */
             tapViewGestures.Tap += (s, e) =>
             {
-                Device.BeginInvokeOnMainThread(() =>
+                long cur = Utils.getUnixTime();
+                long diff = cur - lastTapAtUnixTime;
+                lastTapAtUnixTime = cur;
+                 Console.WriteLine("Tap_diff {0}", diff);
+                if (diff <= 3) //短い間隔でタップが複数回行われていた場合
                 {
-                    Console.WriteLine("Tap!");
+                    Task.Run(() =>
+                    {
+                        Console.WriteLine("Double Tap!");
 
-                    inputUpdate(MouseInteractionType.LEFT_CLICK, -1, -1); // left click
-                });
+                        inputUpdate(MouseInteractionType.LEFT_DOUBLE_CLICK, -1, -1);
+                    });
+                }
+                else
+                {
+                    Task.Run(() =>
+                    {
+                        Console.WriteLine("Tap!");
+
+                        inputUpdate(MouseInteractionType.LEFT_CLICK, -1, -1); // left click
+                    });
+                }
             };
             tapViewGestures.LongTap += (s, e) =>
             {
-                Device.BeginInvokeOnMainThread(() =>
+                Task.Run(() =>
                 {
                     Console.WriteLine("Long Tap!");
 
@@ -92,28 +111,23 @@ namespace RemoteDesktop.Client.Android
             };
             tapViewGestures.Drag += (s, e) =>
             {
-                lock (this)
+                DragEventArgs moved = (DragEventArgs)e;
+                Task.Run(() =>
                 {
-                    DragEventArgs moved = (DragEventArgs)e;
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        Console.WriteLine("Drag!");
+                    Console.WriteLine("Drag!");
 
-                        inputUpdate(MouseInteractionType.POSITION_SET, (int)moved.DistanceX, (int)moved.DistanceY); // Drag
-                    });
-                }
+                    inputUpdate(MouseInteractionType.POSITION_SET, (int)moved.DistanceX, (int)moved.DistanceY); // Drag
+                });
             };
 
 
             tapViewGestures.TouchBegan += (s, e) =>
             {
-                lock (this)
-                {
-                    orgPosXDragStart = int.MaxValue;
-                    orgPosYDragStart = int.MaxValue;
-                    //Console.WriteLine("called TouchBegan.");
-                }
+                orgPosXDragStart = int.MaxValue;
+                orgPosYDragStart = int.MaxValue;
             };
+
+
         }
 
         // called from UI thread

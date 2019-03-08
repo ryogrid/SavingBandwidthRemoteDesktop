@@ -9,6 +9,7 @@ namespace RemoteDesktop.Android.Core
     {
         LEFT_CLICK,
         RIGHT_CLICK,
+        LEFT_DOUBLE_CLICK,
         POSITION_SET
     }
 

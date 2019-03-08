@@ -353,6 +353,9 @@ namespace RemoteDesktop.Server
                     case MouseInteractionType.RIGHT_CLICK:
                         input.Mouse.RightButtonClick();
                         break;
+                    case MouseInteractionType.LEFT_DOUBLE_CLICK: // Double Tap
+                        input.Mouse.LeftButtonDoubleClick();
+                        break;
                 }
 
             }
