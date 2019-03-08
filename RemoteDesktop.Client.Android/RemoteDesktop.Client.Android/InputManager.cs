@@ -17,11 +17,6 @@ namespace RemoteDesktop.Client.Android
         private int internalCursorPosAppCanvasX = -1;
         private int internalCursorPosAppCanvasY = -1;
         public bool isAddedGestureViewLayer = false;
-        /*
-                private int lastDragDistanceX = 0; // イベント未発生時の値が0なので値を確認せずに扱ってよい
-                private int lastDragDistanceY = 0;
-                private bool isTouchEndedOnDrag = false;
-        */
         private int orgPosXDragStart = int.MaxValue;
         private int orgPosYDragStart = int.MaxValue;
 
@@ -31,26 +26,15 @@ namespace RemoteDesktop.Client.Android
             this.layout = layout;
             this.rdpSessionPage = rdpSessionPage;
 
-            //var pressLabel = new Label
-            //{
-            //	Text = "Tap me",
-            //	FontSize = 30
-            //};
-
             tapViewGestures = new ViewGestures
             {
                 BackgroundColor = Color.Transparent,
-                //BackgroundColor = Color.MistyRose,
-                //Content = pressLabel,
-                //AnimationEffect = ViewGestures.AnimationType.atScaling,
-                //AnimationScale = -5,
                 AnimationEffect = ViewGestures.AnimationType.atNone,
-                //                HorizontalOptions = LayoutOptions.FillAndExpand,
-                //                VerticalOptions = LayoutOptions.FillAndExpand
                 HorizontalOptions = LayoutOptions.Fill,
                 VerticalOptions = LayoutOptions.Fill
             };
-            //tapViewGestures.Tap += (s, e) => DisplayAlert("Tap", "Gesture finished", "OK");
+
+/*
             tapViewGestures.SwipeRight += (s, e) =>
             {
                 Device.BeginInvokeOnMainThread(() =>
@@ -87,13 +71,14 @@ namespace RemoteDesktop.Client.Android
                     inputUpdate(4, -1, -1); //RIGHT
                 });
             };
+*/
             tapViewGestures.Tap += (s, e) =>
             {
                 Device.BeginInvokeOnMainThread(() =>
                 {
                     Console.WriteLine("Tap!");
 
-                    inputUpdate(5, -1, -1); // left click
+                    inputUpdate(MouseInteractionType.LEFT_CLICK, -1, -1); // left click
                 });
             };
             tapViewGestures.LongTap += (s, e) =>
@@ -102,7 +87,7 @@ namespace RemoteDesktop.Client.Android
                 {
                     Console.WriteLine("Long Tap!");
 
-                    inputUpdate(6, -1, -1); // right click
+                    inputUpdate(MouseInteractionType.RIGHT_CLICK, -1, -1); // right click
                 });
             };
             tapViewGestures.Drag += (s, e) =>
@@ -110,25 +95,11 @@ namespace RemoteDesktop.Client.Android
                 lock (this)
                 {
                     DragEventArgs moved = (DragEventArgs)e;
-                    /*
-                                    Device.BeginInvokeOnMainThread(() =>
-                                    {
-                                        rdpSessionPage.DisplayAlert("", moved.DistanceX.ToString() + "," + moved.DistanceY.ToString(), "OK");
-                                    });
-                    */
-
-/*
-                    if (isTouchEndedOnDrag == true)
-                    {
-                        //TouchEndedイベントの処理のあとにDragイベントの処理が走るのを回避する
-                        return;
-                    }
-*/
                     Device.BeginInvokeOnMainThread(() =>
                     {
                         Console.WriteLine("Drag!");
 
-                        inputUpdate(7, (int)moved.DistanceX, (int)moved.DistanceY); // Drag
+                        inputUpdate(MouseInteractionType.POSITION_SET, (int)moved.DistanceX, (int)moved.DistanceY); // Drag
                     });
                 }
             };
@@ -140,33 +111,9 @@ namespace RemoteDesktop.Client.Android
                 {
                     orgPosXDragStart = int.MaxValue;
                     orgPosYDragStart = int.MaxValue;
-                    Console.WriteLine("called TouchBegan.");
+                    //Console.WriteLine("called TouchBegan.");
                 }
             };
-/*
-            tapViewGestures.TouchEnded += (s, e) =>
-            {
-                lock (this)
-                {
-                    Console.WriteLine("called TouchEnd.");
-                    //ドラッグ操作の最終的な移動量を内部カーソル位置に反映させる
-                    internalCursorPosAppCanvasX += lastDragDistanceX;
-                    internalCursorPosAppCanvasY += lastDragDistanceY;
-                    if (internalCursorPosAppCanvasX < 0) internalCursorPosAppCanvasX = 0;
-                    if (internalCursorPosAppCanvasX > rdpSessionPage.skiaCanvasWidth) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth;
-                    if (internalCursorPosAppCanvasY < 0) internalCursorPosAppCanvasY = 0;
-                    if (internalCursorPosAppCanvasY > rdpSessionPage.skiaCanvasHeight) internalCursorPosAppCanvasY = rdpSessionPage.skiaCanvasHeight;
-                    lastDragDistanceX = 0;
-                    lastDragDistanceY = 0;
-                    isTouchEndedOnDrag = true;
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        rdpSessionPage.canvas.InvalidateSurface();
-                    });
-                }
-            };
-*/
-            //layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
         }
 
         // called from UI thread
@@ -178,7 +125,7 @@ namespace RemoteDesktop.Client.Android
             });
         }
         //        private void inputUpdate(object state)
-        private void inputUpdate(int code, int x, int y)
+        private void inputUpdate(MouseInteractionType code, int x, int y)
         {
             lock (this)
             {
@@ -204,7 +151,7 @@ namespace RemoteDesktop.Client.Android
                     internalCursorPosAppCanvasY = rdpSessionPage.skiaCanvasHeight / 2;
                 }
 
-                if (code == 7) // drag
+                if (code == MouseInteractionType.POSITION_SET) // drag
                 {
                     //lastDragDistanceX = x;
                     //lastDragDistanceY = y;
@@ -215,7 +162,7 @@ namespace RemoteDesktop.Client.Android
                         orgPosYDragStart = internalCursorPosAppCanvasY;
                     }
                     internalCursorPosAppCanvasX = orgPosXDragStart + x;
-                    internalCursorPosAppCanvasY = orgPosYDragStart + y;
+                    internalCursorPosAppCanvasY = orgPosYDragStart - y; // 画像をフリップしているので方向が逆になる
                     if (internalCursorPosAppCanvasX < 0) internalCursorPosAppCanvasX = 0;
                     if (internalCursorPosAppCanvasX > rdpSessionPage.skiaCanvasWidth) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth;
                     if (internalCursorPosAppCanvasY < 0) internalCursorPosAppCanvasY = 0;
@@ -227,46 +174,52 @@ namespace RemoteDesktop.Client.Android
                         rdpSessionPage.canvas.InvalidateSurface();
                     });
 
-                    /*
-                                        Device.BeginInvokeOnMainThread(() =>
-                                        {
-                                            rdpSessionPage.DisplayAlert("", internalCursorPosAppCanvasX.ToString() + "," + internalCursorPosAppCanvasY.ToString(), "OK");
-                                        });]
-                    */
-                    return;
                 }
 
                 var task = Task.Run(() =>
                 {
-                    //if (isDisposed || uiState != UIStates.Streaming || socket == null || bitmap == null) return;
-
                     if (socket.IsConnected() == false) return;
 
+                    short[] pos_arr = convetCoodClientPanelToPCScreen(internalCursorPosAppCanvasX, internalCursorPosAppCanvasY);
+                    Console.WriteLine("SendCursorPos x={0} y={1}", pos_arr[1], pos_arr[0]);
                     var metaData = new MetaData()
                     {
                         type = MetaDataTypes.UpdateMouse,
-                        /*
-                                                mouseX = (short)((mousePoint.X / image.ActualWidth) * this.metaData.screenWidth),
-                                                mouseY = (short)((mousePoint.Y / image.ActualHeight) * this.metaData.screenHeight),
-                                                mouseScroll = mouseScroll,
-                                                mouseButtonPressed = inputMouseButtonPressed,
-                        */
-                        mouseButtonPressed = (byte)code,
+                        mouseX = pos_arr[1],  // スマホでは画像が90度回転されて表示されているので x と y を入れ替えて渡す
+                        mouseY = pos_arr[0],
+                        mouseInteractionType = code,
                         dataSize = -1
                     };
 
                     socket.SendMetaData(metaData);
                 });
-
-                //if (mouseScrollCount == 0) mouseScroll = 0;
-                //else --mouseScrollCount;
             }
         }
 
-        public void setCursorPosFromServer(int x, int y)
+        private short[] convetCoodClientPanelToPCScreen(int x, int y)
         {
-            internalCursorPosAppCanvasX = x;
-            internalCursorPosAppCanvasY = y;
+            double ratio = rdpSessionPage.pcScreenWidth / (double)rdpSessionPage.skiaCanvasHeight;
+            short[] ret = new short[2];
+            ret[0] = (short) (x * ratio);
+            ret[1] = (short) (y * ratio);
+            return ret;
+        }
+
+        private int[] convertPCScreenToClientPanel(short x, short y)
+        {
+            double ratio = rdpSessionPage.skiaCanvasHeight / (double)rdpSessionPage.pcScreenWidth;
+            int[] ret = new int[2];
+            ret[0] = (int) (x * ratio);
+            ret[1] = (int) (y * ratio);
+            return ret;
+        }
+
+        // PC画面における座標値を渡せば良い
+        public void setCursorPCCoodFromServer(short x, short y)
+        {
+            int[] pos_arr = convertPCScreenToClientPanel(x, y);
+            internalCursorPosAppCanvasX = pos_arr[0];
+            internalCursorPosAppCanvasY = pos_arr[1];
         }
 
         public int[] getCursorInternalCursorPos()
@@ -276,18 +229,6 @@ namespace RemoteDesktop.Client.Android
                 return null;
             }
             int[] ret = new int[2];
-/*
-            int retPosX = internalCursorPosAppCanvasX; + lastDragDistanceX;
-            int retPosY = internalCursorPosAppCanvasY; + lastDragDistanceY;
-
-            if (retPosX < 0) retPosX = 0;
-            if (retPosX > rdpSessionPage.skiaCanvasWidth) retPosX = rdpSessionPage.skiaCanvasWidth;
-            if (retPosY < 0) retPosY = 0;
-            if (retPosY > rdpSessionPage.skiaCanvasHeight) retPosY = rdpSessionPage.skiaCanvasHeight;
-
-            ret[0] = retPosX;
-            ret[1] = retPosY;
-*/
             ret[0] = internalCursorPosAppCanvasX;
             ret[1] = internalCursorPosAppCanvasY;
 

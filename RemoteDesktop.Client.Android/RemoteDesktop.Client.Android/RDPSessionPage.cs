@@ -242,26 +242,24 @@ namespace RemoteDesktop.Client.Android
                 canvas.Clear();
                 canvas.Scale(1, -1, 0, info.Height / 2);
                 canvas.DrawBitmap(skbitmap, sourceRect, destRect);
+                if (input != null)
+                {
+                    int[] xy_arr;
+                    if ((xy_arr = input.getCursorInternalCursorPos()) != null)
+                    {
+                        Console.WriteLine("Draw dummy cursor!");
+                        //SKPoint cursor = new SKPoint(xy_arr[0], xy_arr[1]);
+                        var paint = new SKPaint
+                        {
+                            Color = new SKColor(255, 0, 0),
+                            Style = SKPaintStyle.Fill
+                        };
+                        //canvas.Clear();
+                        canvas.DrawCircle(xy_arr[0], xy_arr[1], 10.0f, paint);
+                    }
+                }
 
                 Console.WriteLine("double_image: canvas size =" + info.Width.ToString() + "x" + info.Height.ToString() + " scaled image size =" + fit_width.ToString() + "x" + fit_height.ToString());
-            }
-
-            if (input != null)
-            {
-                int[] xy_arr;
-                if ((xy_arr = input.getCursorInternalCursorPos()) != null)
-                {
-                    Console.WriteLine("Draw dummy cursor!");
-                    //SKPoint cursor = new SKPoint(xy_arr[0], xy_arr[1]);
-                    var paint = new SKPaint
-                    {
-                        Color = new SKColor(255, 0, 0),
-                        Style = SKPaintStyle.Fill
-                    };
-                    canvas.Clear();
-                    canvas.DrawCircle(xy_arr[0], xy_arr[1], 5.0f, paint);
-                    //canvas.DrawPoint(, new SKColor(0xFF, 0, 0));
-                }
             }
         }
 

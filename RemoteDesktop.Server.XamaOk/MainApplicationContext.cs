@@ -52,12 +52,13 @@ namespace RemoteDesktop.Server
 
         private ExtractedH264Encoder encoder;
         private int timestamp = 0; // equal frame number
-        //public static long aac_encoding_start = 0;
+
 
         private string ffmpegPath = "C:\\Program Files\\ffmpeg-20181231-51b356e-win64-static\\bin\\ffmpeg.exe";
 
         private string ffmpegForAudioEncodeArgs = "-f f32le -ar 48000 -ac 2 -i - -f u16le -ar " + GlobalConfiguration.SamplesPerSecond + " -ac 1 -map 0 -codec:a aac -profile aac_low -aac_coder fast -q:a 0.1 -f adts -";
         private string ffmpegForPCMConvertArgs = "-f f32le -ar 48000 -ac 2 -i - -f u8 -ar " + GlobalConfiguration.SamplesPerSecond + " -ac 1 -";
+
 
         // send Raw PCM data
         //private string ffmpegForAudioEncodeArgs = "-y -loglevel debug -f f32le -ar 48000 -ac 2 -i - -f u8 -ar " + RTPConfiguration.SamplesPerSecond + " -ac 1 -map 0 -";
@@ -101,23 +102,6 @@ namespace RemoteDesktop.Server
             {
                 kickFFMPEG();
             }
-
-/*
-            //// init input simulation
-            if (GlobalConfiguration.isEnableInputDeviceController)
-            {
-                //// start TCP socket listen for image server
-                socket = new DataSocket(NetworkTypes.Server);
-                socket.ConnectedCallback += Socket_ConnectedCallback;
-                //socket.DisconnectedCallback += Socket_DisconnectedCallback;
-                //socket.ConnectionFailedCallback += Socket_ConnectionFailedCallback;
-                //socket.DataRecievedCallback += Socket_DataRecievedCallback;
-                socket.StartDataRecievedCallback += Socket_StartDataRecievedCallback;
-                //socket.EndDataRecievedCallback += Socket_EndDataRecievedCallback;
-                socket.Listen(IPAddress.Parse(GlobalConfiguration.ServerAddress), GlobalConfiguration.ImageServerPort);
-                input = new InputSimulator();
-            }
-*/
 
             if (GlobalConfiguration.isEnableImageStreaming || GlobalConfiguration.isEnableInputDeviceController)
             {
@@ -267,162 +251,131 @@ namespace RemoteDesktop.Server
 			Application.Exit();
 		}
 
-		private void Socket_StartDataRecievedCallback(MetaData metaData)
-		{
-//			lock (this)
-//			{
-				if (isDisposed) return;
+        private void Socket_StartDataRecievedCallback(MetaData metaData)
+        {
+            //			lock (this)
+            //			{
+            if (isDisposed) return;
 
-				void CreateTimer(bool recreate, int fps)
-				{
-					if (recreate && timer != null)
-					{
-                        if (GlobalConfiguration.isStreamRawH264Data)
-                        {
-                            timer.Tick -= Timer_Tick_bitmap_to_openH264_Encoder;
-                        }
-                        else
-                        {
-                            timer.Tick -= Timer_Tick;
-                        }
-                        timer.Dispose();
-						timer = null;
-					}
-
-					if (timer == null)
-					{
-						timer = new System.Windows.Forms.Timer();
-                        timer.Interval = (int) (1000f / fps); // targetFPSは呼び出し時には適切に更新が行われていることを想定
-                        if (GlobalConfiguration.isStreamRawH264Data)
-                        {
-                            timer.Tick += Timer_Tick_bitmap_to_openH264_Encoder;
-                        }
-                        else
-                        {
-                            timer.Tick += Timer_Tick;
-                        }
-					}
-
-					timer.Start();
-				}
-
-				// update settings
-				if (metaData.type == MetaDataTypes.UpdateSettings || metaData.type == MetaDataTypes.StartCapture)
-				{
-                    format = System.Drawing.Imaging.PixelFormat.Format24bppRgb;
-                    //screenIndex = metaData.screenIndex;
-					compress = metaData.compressed;
-					resolutionScale = metaData.resolutionScale;
-					targetFPS = metaData.targetFPS;
-                    if (isFixedParamUse)
-                    {
-                        compress = fixedCompress;
-                        targetFPS = fixedTargetFPS;
-                        resolutionScale = fixedResolutionScale;
-                    }
-                    receivedMetaData = true;
-					//if (metaData.type == MetaDataTypes.UpdateSettings)
-					if (GlobalConfiguration.isEnableImageStreaming && metaData.type == MetaDataTypes.StartCapture)
-					{
-						dispatcher.InvokeAsync(delegate()
-						{
-							CreateTimer(true, (int)targetFPS);
-						});
-					}
-				}
-
-				// start / stop
-				if (metaData.type == MetaDataTypes.StartCapture)
-				{
-					//dispatcher.InvokeAsync(delegate()
-					//{
-					//	CreateTimer(false, (int)targetFPS);
-					//});
-				}
-				else if (metaData.type == MetaDataTypes.PauseCapture)
-				{
-					dispatcher.InvokeAsync(delegate()
-					{
-						timer.Stop();
-					});
-				}
-				else if (metaData.type == MetaDataTypes.ResumeCapture)
-				{
-					dispatcher.InvokeAsync(delegate()
-					{
-						timer.Start();
-					});
-				}
-                else if (metaData.type == MetaDataTypes.UpdateMouse)
+            void CreateTimer(bool recreate, int fps)
+            {
+                if (recreate && timer != null)
                 {
-                    var curPos = Cursor.Position;
-                    switch (metaData.mouseButtonPressed)
+                    if (GlobalConfiguration.isStreamRawH264Data)
                     {
-                        case 1:
-                            Cursor.Position = new Point(curPos.X, curPos.Y - 10);
-                            break;
-                        case 2:
-                            Cursor.Position = new Point(curPos.X, curPos.Y + 10);
-                            break;
-                        case 3:
-                            Cursor.Position = new Point(curPos.X - 10, curPos.Y);
-                            break;
-                        case 4:
-                            Cursor.Position = new Point(curPos.X + 10, curPos.Y);
-                            break;
-                        case 5:
-                            input.Mouse.LeftButtonClick();
-                            break;
-                        case 6:
-                            input.Mouse.RightButtonClick();
-                            break;
-                }
-
-/*
-                    // mouse pos
-                    Cursor.Position = new Point(metaData.mouseX, metaData.mouseY);
-
-                    // mouse clicks
-                    if (inputLastMouseState != metaData.mouseButtonPressed)
-                    {
-                        // handle state changes
-                        if (inputLastMouseState == 1) input.Mouse.LeftButtonUp();
-                        else if (inputLastMouseState == 2) input.Mouse.RightButtonUp();
-                        else if (inputLastMouseState == 3) input.Mouse.XButtonUp(2);
-
-                        // handle new state
-                        if (metaData.mouseButtonPressed == 1) input.Mouse.LeftButtonDown();
-                        else if (metaData.mouseButtonPressed == 2) input.Mouse.RightButtonDown();
-                        else if (metaData.mouseButtonPressed == 3) input.Mouse.XButtonDown(2);
+                        timer.Tick -= Timer_Tick_bitmap_to_openH264_Encoder;
                     }
-
-                    // mouse scroll wheel
-                    if (metaData.mouseScroll != 0) input.Mouse.VerticalScroll(metaData.mouseScroll);
-
-                    // finish
-                    inputLastMouseState = metaData.mouseButtonPressed;
-*/
+                    else
+                    {
+                        timer.Tick -= Timer_Tick;
+                    }
+                    timer.Dispose();
+                    timer = null;
                 }
-                //else if (metaData.type == MetaDataTypes.UpdateKeyboard)
-                //{
-                //	VirtualKeyCode specialKey = 0;
-                //	if (metaData.specialKeyCode != 0)
-                //	{
-                //		specialKey = ConvertKeyCode((Key)metaData.specialKeyCode);
-                //		if (specialKey != 0) input.Keyboard.KeyDown(specialKey);
-                //	}
 
-                //	if (metaData.keyCode != 0)
-                //	{
-                //		var key = ConvertKeyCode((Key)metaData.keyCode);
-                //		if (key != 0) input.Keyboard.KeyPress(key);
-                //		if (specialKey != 0) input.Keyboard.KeyUp(specialKey);
-                //	}
-                //}
-//            }
-		}
+                if (timer == null)
+                {
+                    timer = new System.Windows.Forms.Timer();
+                    timer.Interval = (int)(1000f / fps); // targetFPSは呼び出し時には適切に更新が行われていることを想定
+                    if (GlobalConfiguration.isStreamRawH264Data)
+                    {
+                        timer.Tick += Timer_Tick_bitmap_to_openH264_Encoder;
+                    }
+                    else
+                    {
+                        timer.Tick += Timer_Tick;
+                    }
+                }
 
-		private void Socket_EndDataRecievedCallback()
+                timer.Start();
+            }
+
+            // update settings
+            if (metaData.type == MetaDataTypes.UpdateSettings || metaData.type == MetaDataTypes.StartCapture)
+            {
+                format = System.Drawing.Imaging.PixelFormat.Format24bppRgb;
+                //screenIndex = metaData.screenIndex;
+                compress = metaData.compressed;
+                resolutionScale = metaData.resolutionScale;
+                targetFPS = metaData.targetFPS;
+                if (isFixedParamUse)
+                {
+                    compress = fixedCompress;
+                    targetFPS = fixedTargetFPS;
+                    resolutionScale = fixedResolutionScale;
+                }
+                receivedMetaData = true;
+                if (GlobalConfiguration.isEnableImageStreaming && metaData.type == MetaDataTypes.StartCapture)
+                {
+                    dispatcher.InvokeAsync(delegate ()
+                    {
+                        CreateTimer(true, (int)targetFPS);
+                    });
+                }
+            }
+
+            if (metaData.type == MetaDataTypes.PauseCapture)
+            {
+                dispatcher.InvokeAsync(delegate ()
+                {
+                    timer.Stop();
+                });
+            }
+            else if (metaData.type == MetaDataTypes.ResumeCapture)
+            {
+                dispatcher.InvokeAsync(delegate ()
+                {
+                    timer.Start();
+                });
+            }
+            else if (metaData.type == MetaDataTypes.UpdateMouse)
+            {
+                var curPos = Cursor.Position;
+                switch (metaData.mouseInteractionType)
+                {
+                    case MouseInteractionType.POSITION_SET:
+                        int x = metaData.mouseX;
+                        int y = metaData.mouseY;
+                        if (x < 0) x = 0;
+                        if (x > screenRect.Width) x = screenRect.Width;
+                        if (y < 0) y = 0;
+                        if (y > screenRect.Height) y = screenRect.Height;
+
+                        int half_width = screenRect.Width / 2;
+                        int half_height = screenRect.Height / 2;
+                        x = half_width - (x - half_width);
+                        y = half_height - (y - half_height);
+                        Cursor.Position = new Point(x, y);
+                        break;
+                    case MouseInteractionType.LEFT_CLICK:
+                        input.Mouse.LeftButtonClick();
+                        break;
+                    case MouseInteractionType.RIGHT_CLICK:
+                        input.Mouse.RightButtonClick();
+                        break;
+                }
+
+            }
+            //else if (metaData.type == MetaDataTypes.UpdateKeyboard)
+            //{
+            //	VirtualKeyCode specialKey = 0;
+            //	if (metaData.specialKeyCode != 0)
+            //	{
+            //		specialKey = ConvertKeyCode((Key)metaData.specialKeyCode);
+            //		if (specialKey != 0) input.Keyboard.KeyDown(specialKey);
+            //	}
+
+            //	if (metaData.keyCode != 0)
+            //	{
+            //		var key = ConvertKeyCode((Key)metaData.keyCode);
+            //		if (key != 0) input.Keyboard.KeyPress(key);
+            //		if (specialKey != 0) input.Keyboard.KeyUp(specialKey);
+            //	}
+            //}
+            //            }
+        }
+
+        private void Socket_EndDataRecievedCallback()
 		{
 			// do nothing
 		}

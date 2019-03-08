@@ -82,7 +82,7 @@ namespace RemoteDesktop.Android.Core
 		public float targetFPS;
 
 		public short mouseX, mouseY;
-        public byte mouseButtonPressed;
+        public MouseInteractionType mouseInteractionType;
 
 		//public sbyte mouseScroll;
 		//public byte mouseButtonPressed, keyCode, specialKeyCode;
