@@ -18,6 +18,9 @@ namespace RemoteDesktop.Client.Android
         private int internalCursorPosAppCanvasY = -1;
         public bool isAddedGestureViewLayer = false;
 
+        private int lastDragDistanceX = 0; // イベント未発生時の値が0なので値を確認せずに扱ってよい
+        private int lastDragDistanceY = 0;
+
         public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout, RDPSessionPage rdpSessionPage)
         {
             this.socket = socket;
@@ -108,7 +111,19 @@ namespace RemoteDesktop.Client.Android
 
                     inputUpdate(7, (int)moved.DistanceX, (int)moved.DistanceY); // Drag
                 });
+            };
 
+            tapViewGestures.TouchEnded += (s, e) =>
+            {
+                //ドラッグ操作の最終的な移動量を内部カーソル位置に反映させる
+                internalCursorPosAppCanvasX += lastDragDistanceX;
+                internalCursorPosAppCanvasY += lastDragDistanceY;
+                if (internalCursorPosAppCanvasX < 0) internalCursorPosAppCanvasX = 0;
+                if (internalCursorPosAppCanvasX > rdpSessionPage.skiaCanvasWidth) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth;
+                if (internalCursorPosAppCanvasY < 0) internalCursorPosAppCanvasY = 0;
+                if (internalCursorPosAppCanvasY > rdpSessionPage.skiaCanvasHeight) internalCursorPosAppCanvasY = rdpSessionPage.skiaCanvasHeight;
+                lastDragDistanceX = 0;
+                lastDragDistanceY = 0;
             };
             //layout.Children.Add(tapViewGestures, new Rectangle(0, 0, RDPSessionPage.width, RDPSessionPage.height));
         }
@@ -149,12 +164,8 @@ namespace RemoteDesktop.Client.Android
 
                 if(code == 7) // drag
                 {
-                    internalCursorPosAppCanvasX += (int)(x/4.0);
-                    internalCursorPosAppCanvasY += (int)(y/4.0);
-                    if (internalCursorPosAppCanvasX < 0) internalCursorPosAppCanvasX = 0;
-                    if (internalCursorPosAppCanvasX > rdpSessionPage.skiaCanvasWidth) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth;
-                    if (internalCursorPosAppCanvasY < 0) internalCursorPosAppCanvasY = 0;
-                    if (internalCursorPosAppCanvasY > rdpSessionPage.skiaCanvasHeight) internalCursorPosAppCanvasY = rdpSessionPage.skiaCanvasHeight;
+                    lastDragDistanceX = x;
+                    lastDragDistanceY = y;
 
                     Console.WriteLine("called inputUpdate: {0}x{1}; moveX={2}, moveY={3}; updated cursor {4}, {5}", rdpSessionPage.skiaCanvasWidth, rdpSessionPage.skiaCanvasHeight, x, y, internalCursorPosAppCanvasX, internalCursorPosAppCanvasY);
                     Device.BeginInvokeOnMainThread(() =>
@@ -211,8 +222,17 @@ namespace RemoteDesktop.Client.Android
                 return null;
             }
             int[] ret = new int[2];
-            ret[0] = internalCursorPosAppCanvasX;
-            ret[1] = internalCursorPosAppCanvasY;
+            int retPosX = internalCursorPosAppCanvasX + lastDragDistanceX;
+            int retPosY = internalCursorPosAppCanvasY + lastDragDistanceY;
+
+            if (retPosX < 0) retPosX = 0;
+            if (retPosX > rdpSessionPage.skiaCanvasWidth) retPosX = rdpSessionPage.skiaCanvasWidth;
+            if (retPosY < 0) retPosY = 0;
+            if (retPosY > rdpSessionPage.skiaCanvasHeight) retPosY = rdpSessionPage.skiaCanvasHeight;
+
+            ret[0] = retPosX;
+            ret[1] = retPosY;
+
             return ret;
         }
     }
