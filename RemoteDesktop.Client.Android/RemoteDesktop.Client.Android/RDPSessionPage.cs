@@ -252,7 +252,7 @@ namespace RemoteDesktop.Client.Android
                 if ((xy_arr = input.getCursorInternalCursorPos()) != null)
                 {
                     Console.WriteLine("Draw dummy cursor!");
-                    SKPoint cursor = new SKPoint(xy_arr[0], xy_arr[1]);
+                    //SKPoint cursor = new SKPoint(xy_arr[0], xy_arr[1]);
                     var paint = new SKPaint
                     {
                         Color = new SKColor(255, 0, 0),
