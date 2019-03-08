@@ -326,9 +326,10 @@ namespace RemoteDesktop.Client.Android
             {
                 addBitmatDisplayComponentToLayout();
             }
-            if (input != null)
+            if (input != null && !input.isAddedGestureViewLayer)
             {
                 input.addGestureViewLayer();
+                input.isAddedGestureViewLayer = true;
             }
             this.isAppDisplaySizeGot = true;
         }

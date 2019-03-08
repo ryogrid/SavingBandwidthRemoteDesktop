@@ -39,7 +39,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WavPlayer", "WavPlayer\WavP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpusWrapper", "OpusWrapper\OpusWrapper.csproj", "{838BDB0B-5EB1-4C1E-9026-0A8842AC00C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PixFormatConvertTest", "PixFormatConvertTest\PixFormatConvertTest.csproj", "{71AAA48F-FDE7-407F-BB4D-45D7C0B7D6ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PixFormatConvertTest", "PixFormatConvertTest\PixFormatConvertTest.csproj", "{71AAA48F-FDE7-407F-BB4D-45D7C0B7D6ED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScnViewGesturesMine", "ScnViewGesturesMine\ScnViewGesturesMine.csproj", "{91B1197F-F107-4D97-8379-6C2778A501BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScnViewGesturesMine.Droid", "ScnViewGesturesMine.Droid\ScnViewGesturesMine.Droid.csproj", "{87963621-5B2F-413A-8761-266CBB7C7BB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -249,6 +253,30 @@ Global
 		{71AAA48F-FDE7-407F-BB4D-45D7C0B7D6ED}.Release|x64.Build.0 = Release|Any CPU
 		{71AAA48F-FDE7-407F-BB4D-45D7C0B7D6ED}.Release|x86.ActiveCfg = Release|Any CPU
 		{71AAA48F-FDE7-407F-BB4D-45D7C0B7D6ED}.Release|x86.Build.0 = Release|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Debug|x64.Build.0 = Debug|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Debug|x86.Build.0 = Debug|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Release|x64.ActiveCfg = Release|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Release|x64.Build.0 = Release|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Release|x86.ActiveCfg = Release|Any CPU
+		{91B1197F-F107-4D97-8379-6C2778A501BB}.Release|x86.Build.0 = Release|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Debug|x64.Build.0 = Debug|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Debug|x86.Build.0 = Debug|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|x64.ActiveCfg = Release|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|x64.Build.0 = Release|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|x86.ActiveCfg = Release|Any CPU
+		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

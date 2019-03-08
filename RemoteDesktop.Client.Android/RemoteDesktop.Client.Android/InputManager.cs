@@ -16,6 +16,7 @@ namespace RemoteDesktop.Client.Android
         private RDPSessionPage rdpSessionPage;
         private int internalCursorPosAppCanvasX = -1;
         private int internalCursorPosAppCanvasY = -1;
+        public bool isAddedGestureViewLayer = false;
 
         public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout, RDPSessionPage rdpSessionPage)
         {
@@ -148,13 +149,14 @@ namespace RemoteDesktop.Client.Android
 
                 if(code == 7) // drag
                 {
-                    internalCursorPosAppCanvasX += (int)(x/3.0);
-                    internalCursorPosAppCanvasY += (int)(y/3.0);
+                    internalCursorPosAppCanvasX += (int)(x/4.0);
+                    internalCursorPosAppCanvasY += (int)(y/4.0);
                     if (internalCursorPosAppCanvasX < 0) internalCursorPosAppCanvasX = 0;
                     if (internalCursorPosAppCanvasX > rdpSessionPage.skiaCanvasWidth) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasWidth;
                     if (internalCursorPosAppCanvasY < 0) internalCursorPosAppCanvasY = 0;
-                    if (internalCursorPosAppCanvasY > rdpSessionPage.skiaCanvasHeight) internalCursorPosAppCanvasX = rdpSessionPage.skiaCanvasHeight;
+                    if (internalCursorPosAppCanvasY > rdpSessionPage.skiaCanvasHeight) internalCursorPosAppCanvasY = rdpSessionPage.skiaCanvasHeight;
 
+                    Console.WriteLine("called inputUpdate: {0}x{1}; moveX={2}, moveY={3}; updated cursor {4}, {5}", rdpSessionPage.skiaCanvasWidth, rdpSessionPage.skiaCanvasHeight, x, y, internalCursorPosAppCanvasX, internalCursorPosAppCanvasY);
                     Device.BeginInvokeOnMainThread(() =>
                     {
                         rdpSessionPage.canvas.InvalidateSurface();
