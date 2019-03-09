@@ -32,8 +32,9 @@ namespace OpenH264.Encoder
         
         public void setup(int width, int height, int bps, float fps, float keyFrameInterval)
         {
+            var exe_path = System.AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\');
             // H264エンコーダーを作成
-            encoder = new OpenH264Lib.Encoder("openh264-1.7.0-win32.dll");
+            encoder = new OpenH264Lib.Encoder(exe_path + "\\openh264-1.7.0-win32.dll");
 
             // 1フレームエンコードするごとにライターに書き込み
             OpenH264Lib.Encoder.OnEncodeCallback onEncode = (data, length, frameType) => { };
