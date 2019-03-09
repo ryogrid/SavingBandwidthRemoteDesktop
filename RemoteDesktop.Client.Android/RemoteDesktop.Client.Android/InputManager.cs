@@ -216,7 +216,7 @@ namespace RemoteDesktop.Client.Android
             //ret[0] = (short) ((x + ((rdpSessionPage.skiaCanvasWidth - renderedAreaWidth) /2)) * ratio);
             // 半分にしない方が良さそうだったのでそうしてみる
             //ret[0] = (short) ((x - (rdpSessionPage.skiaCanvasWidth - renderedAreaWidth)) * ratio);
-            ret[0] = (short) ((x * ratio);            
+            ret[0] = (short) (x * ratio);            
             ret[1] = (short) (y * ratio);
             return ret;
         }
