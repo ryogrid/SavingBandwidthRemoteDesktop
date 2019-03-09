@@ -20,6 +20,8 @@ namespace RemoteDesktop.Client.Android
         private int orgPosXDragStart = int.MaxValue;
         private int orgPosYDragStart = int.MaxValue;
         private long lastTapAtUnixTime = 0;
+        public int renderedAreaWidth = -1;
+        public int renderedAreaHeight = -1;
 
         public InputManager(DataSocket socket, Xamarin.Forms.AbsoluteLayout layout, RDPSessionPage rdpSessionPage)
         {
@@ -211,11 +213,15 @@ namespace RemoteDesktop.Client.Android
         {
             double ratio = rdpSessionPage.pcScreenWidth / (double)rdpSessionPage.skiaCanvasHeight;
             short[] ret = new short[2];
-            ret[0] = (short) (x * ratio);
+            //ret[0] = (short) ((x + ((rdpSessionPage.skiaCanvasWidth - renderedAreaWidth) /2)) * ratio);
+            // 半分にしない方が良さそうだったのでそうしてみる
+            //ret[0] = (short) ((x - (rdpSessionPage.skiaCanvasWidth - renderedAreaWidth)) * ratio);
+            ret[0] = (short) ((x * ratio);            
             ret[1] = (short) (y * ratio);
             return ret;
         }
 
+        // TODO: 使うことになったら上記と同じ補正が必要
         private int[] convertPCScreenToClientPanel(short x, short y)
         {
             double ratio = rdpSessionPage.skiaCanvasHeight / (double)rdpSessionPage.pcScreenWidth;

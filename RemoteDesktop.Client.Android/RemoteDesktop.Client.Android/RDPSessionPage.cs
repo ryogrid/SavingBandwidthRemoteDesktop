@@ -204,8 +204,13 @@ namespace RemoteDesktop.Client.Android
                 canvas.Clear();
                 canvas.Scale(1, -1, 0, info.Height / 2);
                 canvas.DrawBitmap(skbitmap, sourceRect, destRect);
+
                 if (input != null)
                 {
+                    input.renderedAreaWidth = (int) destRect.Width;
+                    input.renderedAreaHeight = (int) destRect.Height;
+
+
                     int[] xy_arr;
                     if ((xy_arr = input.getCursorInternalCursorPos()) != null)
                     {

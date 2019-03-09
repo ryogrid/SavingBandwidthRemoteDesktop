@@ -79,10 +79,10 @@ namespace RemoteDesktop.Android.Core
         public static int SampleRateDummyForSoundEnDecoder = 16000;
 
         public static bool isEnableImageStreaming = true;
-        public static bool isEnableSoundStreaming = false;
+        public static bool isEnableSoundStreaming = true;
         public static bool isEnableInputDeviceController = true;
 
-        public static int cursorPosHosseiY = 36;
+        public static int cursorPosHosseiY = 0;//36;
 
         // for 流用元コード. Xamarin対応版では利用されない
         public String FileName = "";
