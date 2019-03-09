@@ -38,10 +38,6 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenH264Lib, Version=1.0.6941.141, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\OpenH264Lib.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -94,6 +90,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\OpenH264LibBase\OpenH264Lib.vcxproj">
+      <Project>{b4fe105e-c607-40dc-a86b-aed03e14d18d}</Project>
+      <Name>OpenH264Lib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RemoteDesktop.Android.Core\RemoteDesktop.Android.Core.csproj">
       <Project>{4ecbdb10-8923-46eb-b3a9-33016ddfb774}</Project>
       <Name>RemoteDesktop.Android.Core</Name>

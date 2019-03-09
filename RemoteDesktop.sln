@@ -45,6 +45,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScnViewGesturesMine", "ScnV
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScnViewGesturesMine.Droid", "ScnViewGesturesMine.Droid\ScnViewGesturesMine.Droid.csproj", "{87963621-5B2F-413A-8761-266CBB7C7BB3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenH264Lib", "OpenH264LibBase\OpenH264Lib.vcxproj", "{B4FE105E-C607-40DC-A86B-AED03E14D18D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -277,6 +279,16 @@ Global
 		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|x64.Build.0 = Release|Any CPU
 		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|x86.ActiveCfg = Release|Any CPU
 		{87963621-5B2F-413A-8761-266CBB7C7BB3}.Release|x86.Build.0 = Release|Any CPU
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Debug|x64.ActiveCfg = Debug|x64
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Debug|x64.Build.0 = Debug|x64
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Debug|x86.ActiveCfg = Debug|Win32
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Debug|x86.Build.0 = Debug|Win32
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Release|Any CPU.ActiveCfg = Release|Win32
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Release|x64.ActiveCfg = Release|x64
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Release|x64.Build.0 = Release|x64
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Release|x86.ActiveCfg = Release|Win32
+		{B4FE105E-C607-40DC-A86B-AED03E14D18D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
