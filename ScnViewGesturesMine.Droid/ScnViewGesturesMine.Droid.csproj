@@ -58,6 +58,12 @@
   <ItemGroup>
     <Folder Include="Resources\drawable\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScnViewGesturesMine\ScnViewGesturesMine.csproj">
+      <Project>{7eb074b6-4629-41b3-9fc6-4525132aede5}</Project>
+      <Name>ScnViewGesturesMine</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
