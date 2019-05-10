@@ -236,10 +236,12 @@ namespace RemoteDesktop.Client.Android
 
         private void DisposePageHavingResources()
         {
+            Console.WriteLine("DisposePageHavingResources called!");
             if (player != null)
             {
                 // サウンド回りの終了処理はこの呼び出しで全て行われる
                 player.togglePlayingTCP();
+                player = null;
             }
             if (socket != null)
             {
