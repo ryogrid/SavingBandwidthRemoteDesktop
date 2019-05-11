@@ -26,6 +26,8 @@ namespace RemoteDesktop.Client.Android.Droid
         MediaFormat mOutputFormat;
         DecoderCallback mCallbackObj;
         int frameCounter = 0;
+        public bool isClosed = false;
+
 
         public event DecodedBitmapHandler encodedDataGenerated;
 
@@ -42,13 +44,18 @@ namespace RemoteDesktop.Client.Android.Droid
         private void OnInputBufferAvailableInner(MediaCodec mc, int inputBufferId)
         {
             byte[] encoded_data = null;
-            while ((encoded_data = mCallbackObj.getEncodedFrameData()) == null)
+            while (((encoded_data = mCallbackObj.getEncodedFrameData()) == null) && isClosed == false)
             {
                 Thread.Sleep(500);
             }
+            if (isClosed)
+            {
+                return;
+            }
             Console.WriteLine("OnInputBufferAvailable: got encoded data!");
-            
-            if (encoded_data != null) {
+
+            if (encoded_data != null)
+            {
                 int sampleSize = encoded_data.Length;
                 if (sampleSize > 0)
                 {
@@ -59,7 +66,8 @@ namespace RemoteDesktop.Client.Android.Droid
                     {
                         Console.WriteLine("feed a frame contains SSP and PSP");
                         mDecoder.QueueInputBuffer(inputBufferId, 0, sampleSize, 0, MediaCodec.BufferFlagCodecConfig);
-                    }else
+                    }
+                    else
                     {
                         Console.WriteLine("QueueInputBuffer inputIndex=" + inputBufferId.ToString());
                         mDecoder.QueueInputBuffer(inputBufferId, 0, sampleSize, frameCounter * 1000 /* 1FPS */, 0);
@@ -138,6 +146,9 @@ namespace RemoteDesktop.Client.Android.Droid
         private MediaFormat mOutputFormat; // member variable
         private MediaFormat inputFormat;
         private DecoderCallback mCallbackObj;
+        private Handler handler = null;
+        private HandlerThread callbackThread = null;
+        private MyCallback myCallback = null;
 
         private long CurrentTimeMillisSharp()
         {
@@ -146,13 +157,14 @@ namespace RemoteDesktop.Client.Android.Droid
 
         public bool setup(DecoderCallback callback_obj, int width, int height) //format_hint is aviFileContent 
         {
-            HandlerThread callbackThread = new HandlerThread("H264DecoderHandler");
+            callbackThread = new HandlerThread("H264DecoderHandler");
             callbackThread.Start();
-            Handler handler = new Handler(callbackThread.Looper);
+            handler = new Handler(callbackThread.Looper);
 
             mDecoder = MediaCodec.CreateDecoderByType(MIME);
             mCallbackObj = callback_obj;
-            mDecoder.SetCallback(new MyCallback(mDecoder, mCallbackObj), handler);
+            myCallback = new MyCallback(mDecoder, mCallbackObj);
+            mDecoder.SetCallback(myCallback, handler);
 
             //mOutputFormat = mDecoder.GetOutputFormat(); // option B
             inputFormat = MediaFormat.CreateVideoFormat(MIME, width, height);
@@ -178,9 +190,36 @@ namespace RemoteDesktop.Client.Android.Droid
 
         public void Close()
         {
-            mDecoder.Stop();
-            mDecoder.Release();
-            eosReceived = true;
+            Console.WriteLine("called Close at PlatformVideoDecoderAndroid Class.");
+            try
+            {
+                if (callbackThread != null)
+                {
+
+                    myCallback.isClosed = true;
+                    callbackThread.Looper.Quit();
+                    callbackThread.Looper.Dispose();
+                    callbackThread.Interrupt();
+                    callbackThread.Dispose();
+                    callbackThread = null;
+                }
+                if (handler != null)
+                {
+                    handler.Dispose();
+                    handler = null;
+                }
+                if (mDecoder != null)
+                {
+                    mDecoder.Stop();
+                    mDecoder.Release();
+                    mDecoder.Dispose();
+                    eosReceived = true;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
     }
 }

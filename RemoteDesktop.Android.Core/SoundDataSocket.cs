@@ -305,135 +305,140 @@ namespace RemoteDesktop.Android.Core.Sound
 
 		private void RecieveDataCallback(IAsyncResult ar)
 		{
-            lock (this)
-			{
-				// validate socket
-				if (isDisposed || socket == null || !socket.Connected) return;
+            try
+            {
+                lock (this)
+                {
+                    // validate socket
+                    if (isDisposed || socket == null || !socket.Connected) return;
 
-				// handle failed reads
-				int bytesRead;
-				try
-				{
-					bytesRead = socket.EndReceive(ar); // this retuened larger than buffer size? (it means total read byte size?) => maybe No
-				}
-				catch
-				{
-					return;
-				}
+                    // handle failed reads
+                    int bytesRead;
+                    try
+                    {
+                        bytesRead = socket.EndReceive(ar); // this retuened larger than buffer size? (it means total read byte size?) => maybe No
+                    }
+                    catch
+                    {
+                        return;
+                    }
 
-				// write data to stream
-				var state = (ReceiveState)ar.AsyncState;
-				if (bytesRead > 0)
-				{
-					EXTRA_STREAM:;
-					int overflow = 0;
+                    // write data to stream
+                    var state = (ReceiveState)ar.AsyncState;
+                    if (bytesRead > 0)
+                    {
+                        EXTRA_STREAM:;
+                        int overflow = 0;
 
-					// read meta data
-					if (pktHdrBufferRead < pktHdrSize)
-					{
-						int count = Math.Min(pktHdrSize - pktHdrBufferRead, bytesRead);
-						Array.Copy(receiveBuffer, 0, pktHdrBuffer, pktHdrBufferRead, count);
-						pktHdrBufferRead += count;
-
-                        // DEBUG: if EndReceive func do not return total read bytes, calc sum code may be needed!!!
-						//if (bytesRead < metaDataSize)
+                        // read meta data
                         if (pktHdrBufferRead < pktHdrSize)
-                            {
-							try {socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);} catch {}
-							return;
-						}
-						else
-						{
-							ReceiveBufferShiftDown(count);
-							bytesRead -= count;
-							overflow = bytesRead; // overflow and current bytesRead means bitmap data already read (if value > 0)
+                        {
+                            int count = Math.Min(pktHdrSize - pktHdrBufferRead, bytesRead);
+                            Array.Copy(receiveBuffer, 0, pktHdrBuffer, pktHdrBufferRead, count);
+                            pktHdrBufferRead += count;
 
-                            ////debugPrintByteArray4ElemSpan(pktHdrBuffer);
-                            //BinaryFormatter bf = new BinaryFormatter();
-                            //pktHdr = (PacketHeader) bf.Deserialize(new MemoryStream(pktHdrBuffer));
-                            IntPtr ptr = Marshal.AllocHGlobal(pktHdrSize);
-                            Marshal.Copy(pktHdrBuffer, 0, ptr, pktHdrSize);
-                            pktHdr = (PacketHeader) Marshal.PtrToStructure(ptr, typeof(PacketHeader));
-                            Marshal.FreeHGlobal(ptr);
-
-							//if (pktHdr.dataSize == 0) throw new Exception("Invalid data size");
-                            if(pktHdr.dataSize == 0)
+                            // DEBUG: if EndReceive func do not return total read bytes, calc sum code may be needed!!!
+                            //if (bytesRead < metaDataSize)
+                            if (pktHdrBufferRead < pktHdrSize)
                             {
-                                Console.WriteLine("SoundDataSocket::RecieveDataCallback: pktHdr.datasize is 0 !!!");
-                                pktHdrBufferRead = 0;
-                                try {socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState());} catch {}
+                                try { socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state); } catch { }
                                 return;
                             }
+                            else
+                            {
+                                ReceiveBufferShiftDown(count);
+                                bytesRead -= count;
+                                overflow = bytesRead; // overflow and current bytesRead means bitmap data already read (if value > 0)
 
-							// fire start callback
-							FireStartDataRecievedCallback(pktHdr);
+                                ////debugPrintByteArray4ElemSpan(pktHdrBuffer);
+                                //BinaryFormatter bf = new BinaryFormatter();
+                                //pktHdr = (PacketHeader) bf.Deserialize(new MemoryStream(pktHdrBuffer));
+                                IntPtr ptr = Marshal.AllocHGlobal(pktHdrSize);
+                                Marshal.Copy(pktHdrBuffer, 0, ptr, pktHdrSize);
+                                pktHdr = (PacketHeader)Marshal.PtrToStructure(ptr, typeof(PacketHeader));
+                                Marshal.FreeHGlobal(ptr);
 
-							// check if message type (if so finish and exit)
-							if (pktHdr.dataSize == -1)
-							{
-								FireEndDataRecievedCallback();
-								pktHdrBufferRead = 0;
-								state = new ReceiveState();
-							}
-							else // server write data after PacketHeader object and read the data
-							{
-								state.size = pktHdr.dataSize; // bitmap data size
-							}
+                                //if (pktHdr.dataSize == 0) throw new Exception("Invalid data size");
+                                if (pktHdr.dataSize == 0)
+                                {
+                                    Console.WriteLine("SoundDataSocket::RecieveDataCallback: pktHdr.datasize is 0 !!!");
+                                    pktHdrBufferRead = 0;
+                                    try { socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState()); } catch { }
+                                    return;
+                                }
 
-							if (overflow > 0) // this means already read but not used data left on receive buffer
-							{
-								goto EXTRA_STREAM;
-							}
-							else // go to read yet not received data (bitmap data)
-							{
-								try {socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);} catch {}
-								return;
-							}
-						}
-					} // not through code from inner of this block to below!!!
+                                // fire start callback
+                                FireStartDataRecievedCallback(pktHdr);
 
-                    // --- after PacketHeader object is read ---
+                                // check if message type (if so finish and exit)
+                                if (pktHdr.dataSize == -1)
+                                {
+                                    FireEndDataRecievedCallback();
+                                    pktHdrBufferRead = 0;
+                                    state = new ReceiveState();
+                                }
+                                else // server write data after PacketHeader object and read the data
+                                {
+                                    state.size = pktHdr.dataSize; // bitmap data size
+                                }
 
-					// read data chunk
-					int offset = state.bytesRead;
-					state.bytesRead += bytesRead;
-					overflow = Math.Max(state.bytesRead - state.size, 0); // overflow > 0 means already read next frame data
-					state.bytesRead = Math.Min(state.bytesRead, state.size);
-					int byteCount = bytesRead - overflow; // calc data size of current frame on receiveBuffer
-					FireDataRecievedCallback(receiveBuffer, byteCount, offset);
+                                if (overflow > 0) // this means already read but not used data left on receive buffer
+                                {
+                                    goto EXTRA_STREAM;
+                                }
+                                else // go to read yet not received data (bitmap data)
+                                {
+                                    try { socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state); } catch { }
+                                    return;
+                                }
+                            }
+                        } // not through code from inner of this block to below!!!
 
-                    //if (state.bytesRead != state.size) // did not read all data of current frame yet
-                    if (state.bytesRead < state.size) // did not read all data of current frame yet
+                        // --- after PacketHeader object is read ---
+
+                        // read data chunk
+                        int offset = state.bytesRead;
+                        state.bytesRead += bytesRead;
+                        overflow = Math.Max(state.bytesRead - state.size, 0); // overflow > 0 means already read next frame data
+                        state.bytesRead = Math.Min(state.bytesRead, state.size);
+                        int byteCount = bytesRead - overflow; // calc data size of current frame on receiveBuffer
+                        FireDataRecievedCallback(receiveBuffer, byteCount, offset);
+
+                        //if (state.bytesRead != state.size) // did not read all data of current frame yet
+                        if (state.bytesRead < state.size) // did not read all data of current frame yet
                         {
-						try {socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);} catch {}
-						return;
-					}
-					else // already read all data of current frame
-					{
-						FireEndDataRecievedCallback();
-					}
+                            try { socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state); } catch { }
+                            return;
+                        }
+                        else // already read all data of current frame
+                        {
+                            FireEndDataRecievedCallback();
+                        }
 
-					
-					if (overflow > 0) // process remaining data (already read next frame data)
-					{
-						state = new ReceiveState();
-						ReceiveBufferShiftDown(bytesRead - overflow); // remove current frame data
-						bytesRead = overflow;
-						pktHdrBufferRead = 0;
-						goto EXTRA_STREAM;
-					}
-					else // finish read all data of current frame. then start wait data arrive of next frame
-					{
-                        pktHdrBufferRead = 0;
-						try {socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState());} catch {}
-						return;
-					}
-				}
-				else // read request to socket failed (some failue should occured) 
-				{
-					disconnected = true;
-				}
-			}
+
+                        if (overflow > 0) // process remaining data (already read next frame data)
+                        {
+                            state = new ReceiveState();
+                            ReceiveBufferShiftDown(bytesRead - overflow); // remove current frame data
+                            bytesRead = overflow;
+                            pktHdrBufferRead = 0;
+                            goto EXTRA_STREAM;
+                        }
+                        else // finish read all data of current frame. then start wait data arrive of next frame
+                        {
+                            pktHdrBufferRead = 0;
+                            try { socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState()); } catch { }
+                            return;
+                        }
+                    }
+                    else // read request to socket failed (some failue should occured) 
+                    {
+                        disconnected = true;
+                    }
+                }
+            }catch(Exception e){
+                Console.WriteLine(e.ToString());
+            }
 		}
 
 		//private unsafe void SendBinary(byte* data, int dataLength)

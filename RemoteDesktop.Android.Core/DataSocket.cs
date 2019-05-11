@@ -377,198 +377,219 @@ namespace RemoteDesktop.Android.Core
             Console.WriteLine("ReceiveDataCallback on DataSockt");
             Console.WriteLine((ReceiveState)ar.AsyncState);
 
-            lock (this)
-			{
-				// validate socket
-				if (isDisposed || socket == null || !socket.Connected) return;
+            try
+            {
+                lock (this)
+                {
+                    // validate socket
+                    if (isDisposed || socket == null || !socket.Connected) return;
 
-				// handle failed reads
-				int bytesRead = 0;
-				try
-				{
-					bytesRead = socket.EndReceive(ar); // this retuened larger than buffer size? (it means total read byte size?) => maybe No
-                    Console.WriteLine("read data size got from socketEndReceive(ar): " + bytesRead.ToString());
-				}
-				catch(Exception ex)
-				{
-                    Console.WriteLine(ex);
-                    disconnected = true;
-				}
+                    // handle failed reads
+                    int bytesRead = 0;
+                    try
+                    {
+                        bytesRead = socket.EndReceive(ar); // this retuened larger than buffer size? (it means total read byte size?) => maybe No
+                        Console.WriteLine("read data size got from socketEndReceive(ar): " + bytesRead.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                        disconnected = true;
+                    }
 
-				// write data to stream
-				var state = (ReceiveState)ar.AsyncState;
-                Console.WriteLine("top of RecieveDataCallback state.size = " + state.size.ToString());
-                Console.WriteLine("top of RecieveDataCallback state.bytesRead = " + state.bytesRead.ToString());
-                Console.WriteLine("top of RecieveDataCallback bytesRead = " + bytesRead.ToString());
-                Console.WriteLine("top of RecieveDataCallback metaDataBufferRead = " + metaDataBufferRead.ToString());
+                    // write data to stream
+                    var state = (ReceiveState)ar.AsyncState;
+                    Console.WriteLine("top of RecieveDataCallback state.size = " + state.size.ToString());
+                    Console.WriteLine("top of RecieveDataCallback state.bytesRead = " + state.bytesRead.ToString());
+                    Console.WriteLine("top of RecieveDataCallback bytesRead = " + bytesRead.ToString());
+                    Console.WriteLine("top of RecieveDataCallback metaDataBufferRead = " + metaDataBufferRead.ToString());
 
-                if (bytesRead > 0)
-				{
-                    EXTRA_STREAM:;
-                    Console.WriteLine("pass EXTRA_STREAM at DataSocket");
-					int overflow = 0;
+                    if (bytesRead > 0)
+                    {
+                        EXTRA_STREAM:;
+                        Console.WriteLine("pass EXTRA_STREAM at DataSocket");
+                        int overflow = 0;
 
-					// read meta data
-					if (metaDataBufferRead < metaDataSize)
-					{
-						int count = Math.Min(metaDataSize - metaDataBufferRead, bytesRead);
-						Array.Copy(receiveBuffer, 0, metaDataBuffer, metaDataBufferRead, count);
-						metaDataBufferRead += count;
-
-                        // DEBUG: if EndReceive func do not return total read bytes, calc sum code may be needed!!!
-						//if (bytesRead < metaDataSize)
+                        // read meta data
                         if (metaDataBufferRead < metaDataSize)
                         {
-                            Console.WriteLine("RecieveDataCallback: metaDataBufferRead < metaDataSize: " + metaDataBufferRead.ToString() + " ,  " + metaDataSize.ToString());
-							try {
-                                socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);
-                            } catch (Exception ex) {
-                                Console.WriteLine(ex);
-                            }
-							return;
-						}
-						else
-						{
-							ReceiveBufferShiftDown(count);
-							bytesRead -= count;
-							overflow = bytesRead; // overflow and current bytesRead means bitmap data already read (if value > 0)
+                            int count = Math.Min(metaDataSize - metaDataBufferRead, bytesRead);
+                            Array.Copy(receiveBuffer, 0, metaDataBuffer, metaDataBufferRead, count);
+                            metaDataBufferRead += count;
 
-                            //BinaryFormatter bf = new BinaryFormatter();
-                            //try
-                            //{
-                            //    metaData = (MetaData)bf.Deserialize(new MemoryStream(metaDataBuffer));
-                            try {
-                                IntPtr ptr = Marshal.AllocHGlobal(metaDataSize);
-                                Marshal.Copy(metaDataBuffer, 0, ptr, metaDataSize);
-                                metaData = (MetaData) Marshal.PtrToStructure(ptr, typeof(MetaData));
-                                Marshal.FreeHGlobal(ptr);
-                            }
-                            catch(Exception ex)
+                            // DEBUG: if EndReceive func do not return total read bytes, calc sum code may be needed!!!
+                            //if (bytesRead < metaDataSize)
+                            if (metaDataBufferRead < metaDataSize)
                             {
-                                // print information for debug
-                                debugPrinbByteArray(metaDataBuffer, 1);
-                                debugPrinbByteArray(receiveBuffer, 1);
-                                Console.WriteLine("state.size = " + state.size.ToString());
-                                Console.WriteLine("state.bytesRead = " + state.bytesRead.ToString());
-                                Console.WriteLine("bytesRead = " + bytesRead.ToString());
-                                Console.WriteLine("metaDataBufferRead = " + metaDataBufferRead.ToString());
-                                Console.WriteLine("count = " + count.ToString());
-                                Console.WriteLine(metaData);
-                                Console.Out.Flush();
-
-                                throw ex;
-                            }
-
-							if (metaData.dataSize == 0) throw new Exception("Invalid data size");
-                            Console.WriteLine("read MetaData at DataSocket success!");
-
-							// fire start callback
-							FireStartDataRecievedCallback(metaData);
-
-							// check if message type (if so finish and exit)
-							if (metaData.dataSize == -1)
-							{
-								FireEndDataRecievedCallback();
-								metaDataBufferRead = 0;
-								state = new ReceiveState();
-
-                                Console.WriteLine("metaData.dataSize == -1. FireEndDataRecievedCallback state.bytesRead=" + state.bytesRead.ToString() + " state.size=" + state.size.ToString());
-						        FireEndDataRecievedCallback();
-                                Console.WriteLine("metaData.dataSize == -1. call socket.BeginReceive func to read next frame because finished read all data of current frame. metaDataBufferRead: " + metaDataBufferRead.ToString());
-                                metaDataBufferRead = 0;
-						        try {
-                                    socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState());
-                                } catch(Exception ex) {
-                                    throw ex;
+                                Console.WriteLine("RecieveDataCallback: metaDataBufferRead < metaDataSize: " + metaDataBufferRead.ToString() + " ,  " + metaDataSize.ToString());
+                                try
+                                {
+                                    socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex);
                                 }
                                 return;
-							}
-							else // server write data after MetaData object and read the data
-							{
-                                Console.WriteLine("set state size after deserialize MetaData:" + metaData.dataSize.ToString());
-								state.size = metaData.dataSize; // bitmap data size
-                                //state.bytesRead = overflow;
-							}
+                            }
+                            else
+                            {
+                                ReceiveBufferShiftDown(count);
+                                bytesRead -= count;
+                                overflow = bytesRead; // overflow and current bytesRead means bitmap data already read (if value > 0)
 
-                            Console.WriteLine("value of state at end of MetaData process block: " + state.size.ToString() + ", " + state.bytesRead.ToString());
-							if (overflow > 0) // this means already read but not used data left on receive buffer
-							{
-                                Console.WriteLine("goto EXTRA_STREAM on MetaData process block: this means already read but not used data left on receive buffer");
-								goto EXTRA_STREAM;
-							}
-							else // go to read yet not received data (bitmap data)
-							{
-                                Console.WriteLine("go to read yet not received data (bitmap data)");
-                                try {
-                                    socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);
-                                } catch (Exception ex) {
+                                //BinaryFormatter bf = new BinaryFormatter();
+                                //try
+                                //{
+                                //    metaData = (MetaData)bf.Deserialize(new MemoryStream(metaDataBuffer));
+                                try
+                                {
+                                    IntPtr ptr = Marshal.AllocHGlobal(metaDataSize);
+                                    Marshal.Copy(metaDataBuffer, 0, ptr, metaDataSize);
+                                    metaData = (MetaData)Marshal.PtrToStructure(ptr, typeof(MetaData));
+                                    Marshal.FreeHGlobal(ptr);
+                                }
+                                catch (Exception ex)
+                                {
+                                    // print information for debug
+                                    debugPrinbByteArray(metaDataBuffer, 1);
+                                    debugPrinbByteArray(receiveBuffer, 1);
+                                    Console.WriteLine("state.size = " + state.size.ToString());
+                                    Console.WriteLine("state.bytesRead = " + state.bytesRead.ToString());
+                                    Console.WriteLine("bytesRead = " + bytesRead.ToString());
+                                    Console.WriteLine("metaDataBufferRead = " + metaDataBufferRead.ToString());
+                                    Console.WriteLine("count = " + count.ToString());
+                                    Console.WriteLine(metaData);
+                                    Console.Out.Flush();
+
                                     throw ex;
                                 }
-								return;
-							}
-						}
-					} // not through code from inner of this block to below!!!
 
-                    // --- after MetaData object is read ---
+                                if (metaData.dataSize == 0) throw new Exception("Invalid data size");
+                                Console.WriteLine("read MetaData at DataSocket success!");
 
-                    Console.WriteLine("value of state *AFTER* end of MetaData process block: " + state.size.ToString() + ", " + state.bytesRead.ToString());
+                                // fire start callback
+                                FireStartDataRecievedCallback(metaData);
 
-					// read data chunk
-					int offset = state.bytesRead;
-                    Console.WriteLine("update state.bytesRead: current state.bytesRead = " + state.bytesRead.ToString() + " bytesRead = " + bytesRead.ToString() + " updated state.bytesRead = " + (state.bytesRead + bytesRead).ToString());
-					state.bytesRead += bytesRead;
-					overflow = Math.Max(state.bytesRead - state.size, 0); // overflow > 0 means already read next frame data
-					state.bytesRead = Math.Min(state.bytesRead, state.size);
-					int byteCount = bytesRead - overflow; // calc data size of current frame on receiveBuffer
-					FireDataRecievedCallback(receiveBuffer, byteCount, offset);
-                    Console.WriteLine("byteCount which means data size of current frame on receiveBuffer: " + byteCount.ToString());
-                    Console.WriteLine("overflow which already data size of next frame on receiveBuffer: " + overflow.ToString());
+                                // check if message type (if so finish and exit)
+                                if (metaData.dataSize == -1)
+                                {
+                                    FireEndDataRecievedCallback();
+                                    metaDataBufferRead = 0;
+                                    state = new ReceiveState();
 
-                    //if (state.bytesRead != state.size) // did not read all data of current frame yet
-                    if (state.bytesRead < state.size) // did not read all data of current frame yet
-                     {
-                        Console.WriteLine("call socket.BeginReceive func to read left bitmap data of current frame");
-						try {
-                            socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);
-                        } catch(Exception ex) {
-                            throw ex;
+                                    Console.WriteLine("metaData.dataSize == -1. FireEndDataRecievedCallback state.bytesRead=" + state.bytesRead.ToString() + " state.size=" + state.size.ToString());
+                                    FireEndDataRecievedCallback();
+                                    Console.WriteLine("metaData.dataSize == -1. call socket.BeginReceive func to read next frame because finished read all data of current frame. metaDataBufferRead: " + metaDataBufferRead.ToString());
+                                    metaDataBufferRead = 0;
+                                    try
+                                    {
+                                        socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState());
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        throw ex;
+                                    }
+                                    return;
+                                }
+                                else // server write data after MetaData object and read the data
+                                {
+                                    Console.WriteLine("set state size after deserialize MetaData:" + metaData.dataSize.ToString());
+                                    state.size = metaData.dataSize; // bitmap data size
+                                                                    //state.bytesRead = overflow;
+                                }
+
+                                Console.WriteLine("value of state at end of MetaData process block: " + state.size.ToString() + ", " + state.bytesRead.ToString());
+                                if (overflow > 0) // this means already read but not used data left on receive buffer
+                                {
+                                    Console.WriteLine("goto EXTRA_STREAM on MetaData process block: this means already read but not used data left on receive buffer");
+                                    goto EXTRA_STREAM;
+                                }
+                                else // go to read yet not received data (bitmap data)
+                                {
+                                    Console.WriteLine("go to read yet not received data (bitmap data)");
+                                    try
+                                    {
+                                        socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        throw ex;
+                                    }
+                                    return;
+                                }
+                            }
+                        } // not through code from inner of this block to below!!!
+
+                        // --- after MetaData object is read ---
+
+                        Console.WriteLine("value of state *AFTER* end of MetaData process block: " + state.size.ToString() + ", " + state.bytesRead.ToString());
+
+                        // read data chunk
+                        int offset = state.bytesRead;
+                        Console.WriteLine("update state.bytesRead: current state.bytesRead = " + state.bytesRead.ToString() + " bytesRead = " + bytesRead.ToString() + " updated state.bytesRead = " + (state.bytesRead + bytesRead).ToString());
+                        state.bytesRead += bytesRead;
+                        overflow = Math.Max(state.bytesRead - state.size, 0); // overflow > 0 means already read next frame data
+                        state.bytesRead = Math.Min(state.bytesRead, state.size);
+                        int byteCount = bytesRead - overflow; // calc data size of current frame on receiveBuffer
+                        FireDataRecievedCallback(receiveBuffer, byteCount, offset);
+                        Console.WriteLine("byteCount which means data size of current frame on receiveBuffer: " + byteCount.ToString());
+                        Console.WriteLine("overflow which already data size of next frame on receiveBuffer: " + overflow.ToString());
+
+                        //if (state.bytesRead != state.size) // did not read all data of current frame yet
+                        if (state.bytesRead < state.size) // did not read all data of current frame yet
+                        {
+                            Console.WriteLine("call socket.BeginReceive func to read left bitmap data of current frame");
+                            try
+                            {
+                                socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, state);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw ex;
+                            }
+                            return;
                         }
-						return;
-					}
-					else // already read all data of current frame
-					{
-                        Console.WriteLine("FireEndDataRecievedCallback state.bytesRead=" + state.bytesRead.ToString() + " state.size=" + state.size.ToString());
-						FireEndDataRecievedCallback();
-					}
-
-					
-					if (overflow > 0) // process remaining data (already read next frame data)
-					{
-						state = new ReceiveState();
-						ReceiveBufferShiftDown(bytesRead - overflow); // remove current frame data
-						bytesRead = overflow;
-						metaDataBufferRead = 0;
-                        Console.WriteLine("goto EXTRA_STREAM *AFTER* MetaData process block: this means already read but not used data left on receive buffer (size is BytesRead, overflow)");
-						goto EXTRA_STREAM;
-					}
-					else // finish read all data of current frame. then start wait data arrive of next frame
-					{
-                        Console.WriteLine("call socket.BeginReceive func to read next frame because finished read all data of current frame. metaDataBufferRead: " + metaDataBufferRead.ToString());
-                        metaDataBufferRead = 0;
-						try {
-                            socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState());
-                        } catch(Exception ex) {
-                            throw ex;
+                        else // already read all data of current frame
+                        {
+                            Console.WriteLine("FireEndDataRecievedCallback state.bytesRead=" + state.bytesRead.ToString() + " state.size=" + state.size.ToString());
+                            FireEndDataRecievedCallback();
                         }
-						return;
-					}
-				}
-				else // read request to socket failed (some failue should occured) 
-				{
-                    Console.WriteLine("read request to socket failed (some failue should occured) ");
-					disconnected = true;
-				}
-			}
+
+
+                        if (overflow > 0) // process remaining data (already read next frame data)
+                        {
+                            state = new ReceiveState();
+                            ReceiveBufferShiftDown(bytesRead - overflow); // remove current frame data
+                            bytesRead = overflow;
+                            metaDataBufferRead = 0;
+                            Console.WriteLine("goto EXTRA_STREAM *AFTER* MetaData process block: this means already read but not used data left on receive buffer (size is BytesRead, overflow)");
+                            goto EXTRA_STREAM;
+                        }
+                        else // finish read all data of current frame. then start wait data arrive of next frame
+                        {
+                            Console.WriteLine("call socket.BeginReceive func to read next frame because finished read all data of current frame. metaDataBufferRead: " + metaDataBufferRead.ToString());
+                            metaDataBufferRead = 0;
+                            try
+                            {
+                                socket.BeginReceive(receiveBuffer, 0, receiveBuffer.Length, SocketFlags.None, RecieveDataCallback, new ReceiveState());
+                            }
+                            catch (Exception ex)
+                            {
+                                throw ex;
+                            }
+                            return;
+                        }
+                    }
+                    else // read request to socket failed (some failue should occured) 
+                    {
+                        Console.WriteLine("read request to socket failed (some failue should occured) ");
+                        disconnected = true;
+                    }
+                }
+            }catch(Exception e) {
+                Console.WriteLine(e.ToString());
+            }
 		}
 
 		//private unsafe void SendBinary(byte* data, int dataLength)

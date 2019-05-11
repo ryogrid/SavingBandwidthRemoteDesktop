@@ -236,26 +236,31 @@ namespace RemoteDesktop.Client.Android
 
         private void DisposePageHavingResources()
         {
-            Console.WriteLine("DisposePageHavingResources called!");
-            if (player != null)
+            try
             {
-                // サウンド回りの終了処理はこの呼び出しで全て行われる
-                player.togglePlayingTCP();
-                player = null;
-            }
-            if (socket != null)
-            {
-                // input server および image server との通信に利用しているソケットの終了処理
-                Device.BeginInvokeOnMainThread(() =>
+                Console.WriteLine("DisposePageHavingResources called!");
+                if (player != null)
                 {
-                    if (socket != null) socket.Dispose();
-                    socket = null;
-                });
-            }
-            if (vdecoder != null)
-            {
-                vdecoder.Close();
-                vdecoder = null;
+                    // サウンド回りの終了処理はこの呼び出しで全て行われる
+                    player.togglePlayingTCP();
+                    player = null;
+                }
+                if (socket != null)
+                {
+                    // input server および image server との通信に利用しているソケットの終了処理
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        if (socket != null) socket.Dispose();
+                        socket = null;
+                    });
+                }
+                if (vdecoder != null)
+                {
+                    vdecoder.Close();
+                    vdecoder = null;
+                }
+            }catch(Exception e) {
+                Console.WriteLine(e.ToString());
             }
         }
         public void connectToSoundServer()

@@ -28,5 +28,12 @@ namespace RemoteDesktop.Client.Android
                 IsPresented = false;
             }
         }
+
+        public void pageMoveToSettings()
+        {
+            Detail = new NavigationPage((Page)Activator.CreateInstance(typeof(SettingPage)));
+            masterPage.listView.SelectedItem = null;
+            IsPresented = false;         
+        }
     }
 }

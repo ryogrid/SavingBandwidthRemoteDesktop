@@ -27,6 +27,8 @@ namespace RemoteDesktop.Client.Android
         protected override void OnResume()
         {
             // Handle when your app resumes
+            MainPage tmpMainPage = (MainPage)this.MainPage;
+            tmpMainPage.pageMoveToSettings();
         }
     }
 }

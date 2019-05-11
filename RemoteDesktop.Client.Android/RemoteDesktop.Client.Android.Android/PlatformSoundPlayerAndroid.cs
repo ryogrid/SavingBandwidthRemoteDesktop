@@ -84,8 +84,12 @@ namespace RemoteDesktop.Client.Android.Droid
 
         public void Close()
         {
-            audioTrack.Stop();
-            audioTrack.Release();
+            if (audioTrack != null)
+            {
+                audioTrack.Stop();
+                audioTrack.Release();
+                audioTrack.Dispose();
+            }
         }
     }
 }
