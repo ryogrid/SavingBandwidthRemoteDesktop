@@ -390,51 +390,78 @@ namespace RemoteDesktop.Server
 		{
 		}
 
-		private void Socket_ConnectedCallback()
-		{
-			Console.WriteLine("Connected to client");
+        private void Socket_ConnectedCallback()
+        {
+            Console.WriteLine("Connected to client");
 
             if (GlobalConfiguration.isEnableImageStreaming && GlobalConfiguration.isStreamRawH264Data)
             {
                 lock (this)
                 {
-                        if (isDisposed) return;
-                        if (isFixedParamUse)
-                        {
-                            encoder = new ExtractedH264Encoder((int)(screenRect.Height * fixedResolutionScale), (int)(screenRect.Width * fixedResolutionScale), 
-                                GlobalConfiguration.h246EncoderBitPerSec, fixedTargetFPS, GlobalConfiguration.h264EncoderKeyframeInterval);
-                            encoder.encodedDataGenerated += h264RawDataHandlerSendTCP;
-                        }
-                        else // この時点ではクライアントから指定されたscaleは分からないので、fixedXXXXXをひとまず使っておく
-                        {
-                            encoder = new ExtractedH264Encoder((int)(screenRect.Height * fixedResolutionScale), (int)(screenRect.Width * fixedResolutionScale),
-                                GlobalConfiguration.h246EncoderBitPerSec, fixedTargetFPS, GlobalConfiguration.h264EncoderKeyframeInterval);
-                            encoder.encodedDataGenerated += h264RawDataHandlerSendTCP;
-                        }
+                    if (isDisposed) return;
 
-/*
-                        void CreateTimer(bool recreate, int fps)
+                    float localScale = 1;
+                    int localHeight = (int)(screenRect.Height * resolutionScale);
+                    int localWidth = (int)(screenRect.Width * resolutionScale);
+                    if (resolutionScale != 1 || fixedResolutionScale != 1)
+                    {
+                        localScale = resolutionScale;
+                        if (fixedResolutionScale != 1)
                         {
-                            if (timer == null)
-                            {
-                                timer = new System.Windows.Forms.Timer();
-                                timer.Interval = (int)(1000f / fps); // targetFPSは呼び出し時には適切に更新が行われていることを想定
-                                timer.Tick += Timer_Tick_bitmap_to_openH264_Encoder;
-                            }
-
-                            timer.Start();
+                            localScale = fixedResolutionScale;
                         }
+                        localHeight = (int)(screenRect.Height * localScale);
+                        // エンコーダーの制約から4の倍数に合わせる
+                        if (localHeight % 4 != 0)
+                        {
+                            localHeight = localHeight - (localHeight % 4);
+                        }
+                        localWidth = (int)(screenRect.Width * localScale);
+                        if (localWidth % 4 != 0)
+                        {
+                            localWidth = localWidth - (localWidth % 4);
+                        }
+                    }
+                    if (isFixedParamUse)
+                    {
+                        encoder = new ExtractedH264Encoder(localHeight, localWidth,
+                            GlobalConfiguration.h246EncoderBitPerSec, fixedTargetFPS, GlobalConfiguration.h264EncoderKeyframeInterval);
+                        //encoder = new ExtractedH264Encoder((int)(screenRect.Height * fixedResolutionScale), (int)(screenRect.Width * fixedResolutionScale),
+                        //    GlobalConfiguration.h246EncoderBitPerSec, fixedTargetFPS, GlobalConfiguration.h264EncoderKeyframeInterval);
+                        encoder.encodedDataGenerated += h264RawDataHandlerSendTCP;
+                    }
+                    else // この時点ではクライアントから指定されたscaleは分からないので、fixedXXXXXをひとまず使っておく
+                    {
+                        encoder = new ExtractedH264Encoder(localHeight, localWidth,
+                            GlobalConfiguration.h246EncoderBitPerSec, fixedTargetFPS, GlobalConfiguration.h264EncoderKeyframeInterval);
+                        //encoder = new ExtractedH264Encoder((int)(screenRect.Height * fixedResolutionScale), (int)(screenRect.Width * fixedResolutionScale),
+                        //    GlobalConfiguration.h246EncoderBitPerSec, fixedTargetFPS, GlobalConfiguration.h264EncoderKeyframeInterval);
+                        encoder.encodedDataGenerated += h264RawDataHandlerSendTCP;
+                    }
 
-					    dispatcher.InvokeAsync(delegate()
-					    {
-						    CreateTimer(false, (int)targetFPS);
-					    });
-*/
+                    /*
+                                            void CreateTimer(bool recreate, int fps)
+                                            {
+                                                if (timer == null)
+                                                {
+                                                    timer = new System.Windows.Forms.Timer();
+                                                    timer.Interval = (int)(1000f / fps); // targetFPSは呼び出し時には適切に更新が行われていることを想定
+                                                    timer.Tick += Timer_Tick_bitmap_to_openH264_Encoder;
+                                                }
+
+                                                timer.Start();
+                                            }
+
+                                            dispatcher.InvokeAsync(delegate()
+                                            {
+                                                CreateTimer(false, (int)targetFPS);
+                                            });
+                    */
                 }
             }
-		}
+        }
 
-		private void Socket_DisconnectedCallback()
+        private void Socket_DisconnectedCallback()
 		{
 			Console.WriteLine("Disconnected from client");
             receivedMetaData = false;
@@ -508,17 +535,17 @@ namespace RemoteDesktop.Server
             socket.SendImage(bmpXama, screenRect.Width, screenRect.Height, screenIndex, compress, targetFPS);
         }
 
-		private void Timer_Tick_bitmap_to_openH264_Encoder(object sender, EventArgs e)
-		{
-			lock (this)
-			{
+        private void Timer_Tick_bitmap_to_openH264_Encoder(object sender, EventArgs e)
+        {
+            lock (this)
+            {
                 if (isFixedParamUse)
                 {
                     resolutionScale = fixedResolutionScale;
                 }
 
                 CaptureScreen();
-                if(timestamp < GlobalConfiguration.initialSkipCaptureNums)
+                if (timestamp < GlobalConfiguration.initialSkipCaptureNums)
                 {
                     timestamp++;
                     return;
@@ -548,16 +575,16 @@ namespace RemoteDesktop.Server
                 encoder.addBitmapFrame(bitmap_ms.ToArray(), timestamp - GlobalConfiguration.initialSkipCaptureNums);
                 timestamp++;
             }
-		}
+        }
 
-		private void Timer_Tick(object sender, EventArgs e)
-		{
-			lock (this)
-			{
-				if (isDisposed) return;
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            lock (this)
+            {
+                if (isDisposed) return;
                 if (!receivedMetaData) return;
 
-				CaptureScreen();
+                CaptureScreen();
                 BitmapXama convedXBmap = null;
                 if (resolutionScale == 1)
                 {
@@ -569,194 +596,209 @@ namespace RemoteDesktop.Server
                     convedXBmap = convertToBitmapXamaAndRotate(scaledBitmap);
                     socket.SendImage(convedXBmap, screenRect.Width, screenRect.Height, screenIndex, compress, targetFPS);
                 }
-			}
-		}
-
-		private void CaptureScreen()
-		{
-//            lock (this)
-//            {
-                if (bitmap == null || bitmap.PixelFormat != format)
-                {
-                    currentScreenIndex = screenIndex;
-
-                    // get screen to catpure
-                    var screens = Screen.AllScreens;
-                    var screen = (screenIndex < screens.Length) ? screens[screenIndex] : screens[0];
-                    screenRect = screen.Bounds;
-                }
-
-                // --- avoid noised bitmap sended due to lotate of convert to BitmapXama (not good solution) ---
-                // create bitmap resources
-                if (bitmap != null)
-                {
-                    bitmap.Dispose();
-                    bitmap = null;
-                }
-                if (graphics != null)
-                {
-                    graphics.Dispose();
-                    graphics = null;
-                }
-
-                //bitmap = new Bitmap(screenRect.Width, screenRect.Height, format);
-                bitmap = ScreenCapturePInvoke.CapturePrimaryScreen(true);
-                graphics = Graphics.FromImage(bitmap);
-
-                float localScale = 1;
-                if (resolutionScale != 1 || fixedResolutionScale != 1)
-                {
-                    if (scaledBitmap != null)
-                    {
-                        scaledBitmap.Dispose();
-                        scaledBitmap = null;
-                    }
-                    if (scaledGraphics != null)
-                    {
-                        scaledGraphics.Dispose();
-                        scaledGraphics = null;
-                    }
-                    localScale = resolutionScale;
-                    if(fixedResolutionScale != 1)
-                    {
-                        localScale = fixedResolutionScale;
-                    }
-                    scaledBitmap = new Bitmap((int)(screenRect.Width * localScale), (int)(screenRect.Height * localScale), format);
-                    scaledGraphics = Graphics.FromImage(scaledBitmap);
-                }
-                // ---                                         end                                          ---
-
-                // capture screen
-                //graphics.CopyFromScreen(screenRect.Left, screenRect.Top, 0, 0, bitmap.Size, CopyPixelOperation.SourceCopy);
-
-/*
-                //カーソルをスケール前のビットマップに描画（Graphicsクラスインスタンスを経由して）
-                Cursor cursor = new Cursor(Cursor.Current.Handle);
-                Point curPoint = Cursor.Position;
-                Point hotSpot = cursor.HotSpot;
-                Point position = new Point((curPoint.X - hotSpot.X),(curPoint.Y - hotSpot.Y));
-                cursor.Draw(graphics, new Rectangle(position, cursor.Size));
-*/
-
-                if (localScale != 1)
-                {
-                    scaledGraphics.DrawImage(bitmap, 0, 0, scaledBitmap.Width, scaledBitmap.Height);
-                }
-//            }
+            }
         }
 
-		//private VirtualKeyCode ConvertKeyCode(Key keycode)
-		//{
-		//	switch (keycode)
-		//	{
-		//		case Key.A: return VirtualKeyCode.VK_A;
-		//		case Key.B: return VirtualKeyCode.VK_B;
-		//		case Key.C: return VirtualKeyCode.VK_C;
-		//		case Key.D: return VirtualKeyCode.VK_D;
-		//		case Key.E: return VirtualKeyCode.VK_E;
-		//		case Key.F: return VirtualKeyCode.VK_F;
-		//		case Key.G: return VirtualKeyCode.VK_G;
-		//		case Key.H: return VirtualKeyCode.VK_H;
-		//		case Key.I: return VirtualKeyCode.VK_I;
-		//		case Key.J: return VirtualKeyCode.VK_J;
-		//		case Key.K: return VirtualKeyCode.VK_K;
-		//		case Key.L: return VirtualKeyCode.VK_L;
-		//		case Key.M: return VirtualKeyCode.VK_M;
-		//		case Key.N: return VirtualKeyCode.VK_N;
-		//		case Key.O: return VirtualKeyCode.VK_O;
-		//		case Key.P: return VirtualKeyCode.VK_P;
-		//		case Key.Q: return VirtualKeyCode.VK_Q;
-		//		case Key.R: return VirtualKeyCode.VK_R;
-		//		case Key.S: return VirtualKeyCode.VK_S;
-		//		case Key.T: return VirtualKeyCode.VK_T;
-		//		case Key.U: return VirtualKeyCode.VK_U;
-		//		case Key.V: return VirtualKeyCode.VK_V;
-		//		case Key.W: return VirtualKeyCode.VK_W;
-		//		case Key.X: return VirtualKeyCode.VK_X;
-		//		case Key.Y: return VirtualKeyCode.VK_Y;
-		//		case Key.Z: return VirtualKeyCode.VK_Z;
+        private void CaptureScreen()
+        {
+            //            lock (this)
+            //            {
+            if (bitmap == null || bitmap.PixelFormat != format)
+            {
+                currentScreenIndex = screenIndex;
 
-		//		case Key.D0: return VirtualKeyCode.VK_0;
-		//		case Key.D1: return VirtualKeyCode.VK_1;
-		//		case Key.D2: return VirtualKeyCode.VK_2;
-		//		case Key.D3: return VirtualKeyCode.VK_3;
-		//		case Key.D4: return VirtualKeyCode.VK_4;
-		//		case Key.D5: return VirtualKeyCode.VK_5;
-		//		case Key.D6: return VirtualKeyCode.VK_6;
-		//		case Key.D7: return VirtualKeyCode.VK_7;
-		//		case Key.D8: return VirtualKeyCode.VK_8;
-		//		case Key.D9: return VirtualKeyCode.VK_9;
+                // get screen to catpure
+                var screens = Screen.AllScreens;
+                var screen = (screenIndex < screens.Length) ? screens[screenIndex] : screens[0];
+                screenRect = screen.Bounds;
+            }
 
-		//		case Key.NumPad0: return VirtualKeyCode.NUMPAD0;
-		//		case Key.NumPad1: return VirtualKeyCode.NUMPAD1;
-		//		case Key.NumPad2: return VirtualKeyCode.NUMPAD2;
-		//		case Key.NumPad3: return VirtualKeyCode.NUMPAD3;
-		//		case Key.NumPad4: return VirtualKeyCode.NUMPAD4;
-		//		case Key.NumPad5: return VirtualKeyCode.NUMPAD5;
-		//		case Key.NumPad6: return VirtualKeyCode.NUMPAD6;
-		//		case Key.NumPad7: return VirtualKeyCode.NUMPAD7;
-		//		case Key.NumPad8: return VirtualKeyCode.NUMPAD8;
-		//		case Key.NumPad9: return VirtualKeyCode.NUMPAD9;
+            // --- avoid noised bitmap sended due to lotate of convert to BitmapXama (not good solution) ---
+            // create bitmap resources
+            if (bitmap != null)
+            {
+                bitmap.Dispose();
+                bitmap = null;
+            }
+            if (graphics != null)
+            {
+                graphics.Dispose();
+                graphics = null;
+            }
 
-		//		case Key.Subtract: return VirtualKeyCode.SUBTRACT;
-		//		case Key.Add: return VirtualKeyCode.ADD;
-		//		case Key.Multiply: return VirtualKeyCode.MULTIPLY;
-		//		case Key.Divide: return VirtualKeyCode.DIVIDE;
-		//		case Key.Decimal: return VirtualKeyCode.DECIMAL;
+            //bitmap = new Bitmap(screenRect.Width, screenRect.Height, format);
+            bitmap = ScreenCapturePInvoke.CapturePrimaryScreen(true);
+            graphics = Graphics.FromImage(bitmap);
 
-		//		case Key.F1: return VirtualKeyCode.F1;
-		//		case Key.F2: return VirtualKeyCode.F2;
-		//		case Key.F3: return VirtualKeyCode.F3;
-		//		case Key.F4: return VirtualKeyCode.F4;
-		//		case Key.F5: return VirtualKeyCode.F5;
-		//		case Key.F6: return VirtualKeyCode.F6;
-		//		case Key.F7: return VirtualKeyCode.F7;
-		//		case Key.F8: return VirtualKeyCode.F8;
-		//		case Key.F9: return VirtualKeyCode.F9;
-		//		case Key.F10: return VirtualKeyCode.F10;
-		//		case Key.F11: return VirtualKeyCode.F11;
-		//		case Key.F12: return VirtualKeyCode.F12;
+            float localScale = 1;
+            if (resolutionScale != 1 || fixedResolutionScale != 1)
+            {
+                if (scaledBitmap != null)
+                {
+                    scaledBitmap.Dispose();
+                    scaledBitmap = null;
+                }
+                if (scaledGraphics != null)
+                {
+                    scaledGraphics.Dispose();
+                    scaledGraphics = null;
+                }
+                localScale = resolutionScale;
+                if (fixedResolutionScale != 1)
+                {
+                    localScale = fixedResolutionScale;
+                }
 
-		//		case Key.LeftShift: return VirtualKeyCode.LSHIFT;
-		//		case Key.RightShift: return VirtualKeyCode.RSHIFT;
-		//		case Key.LeftCtrl: return VirtualKeyCode.LCONTROL;
-		//		case Key.RightCtrl: return VirtualKeyCode.RCONTROL;
-		//		case Key.LeftAlt: return VirtualKeyCode.LMENU;
-		//		case Key.RightAlt: return VirtualKeyCode.RMENU;
+                //scaledBitmap = new Bitmap((int)(screenRect.Width * localScale), (int)(screenRect.Height * localScale), format);
 
-		//		case Key.Back: return VirtualKeyCode.BACK;
-		//		case Key.Space: return VirtualKeyCode.SPACE;
-		//		case Key.Return: return VirtualKeyCode.RETURN;
-		//		case Key.Tab: return VirtualKeyCode.TAB;
-		//		case Key.CapsLock: return VirtualKeyCode.CAPITAL;
-		//		case Key.Oem1: return VirtualKeyCode.OEM_1;
-		//		case Key.Oem2: return VirtualKeyCode.OEM_2;
-		//		case Key.Oem3: return VirtualKeyCode.OEM_3;
-		//		case Key.Oem4: return VirtualKeyCode.OEM_4;
-		//		case Key.Oem5: return VirtualKeyCode.OEM_5;
-		//		case Key.Oem6: return VirtualKeyCode.OEM_6;
-		//		case Key.Oem7: return VirtualKeyCode.OEM_7;
-		//		case Key.Oem8: return VirtualKeyCode.OEM_8;
-		//		case Key.OemComma: return VirtualKeyCode.OEM_COMMA;
-		//		case Key.OemPeriod: return VirtualKeyCode.OEM_PERIOD;
-		//		case Key.Escape: return VirtualKeyCode.ESCAPE;
+                int localHeight = (int)(screenRect.Height * localScale);
+                // エンコーダーの制約から4の倍数に合わせる
+                if (localHeight % 4 != 0)
+                {
+                    localHeight = localHeight - (localHeight % 4);
+                }
+                int localWidth = (int)(screenRect.Width * localScale);
+                if (localWidth % 4 != 0)
+                {
+                    localWidth = localWidth - (localWidth % 4);
+                }
 
-		//		case Key.Home: return VirtualKeyCode.HOME;
-		//		case Key.End: return VirtualKeyCode.END;
-		//		case Key.PageUp: return VirtualKeyCode.PRIOR;
-		//		case Key.PageDown: return VirtualKeyCode.NEXT;
-		//		case Key.Insert: return VirtualKeyCode.INSERT;
-		//		case Key.Delete: return VirtualKeyCode.DELETE;
+                scaledBitmap = new Bitmap(localWidth, localHeight, format);
+                scaledGraphics = Graphics.FromImage(scaledBitmap);
+            }
+            // ---                                         end                                          ---
 
-		//		case Key.Left: return VirtualKeyCode.LEFT;
-		//		case Key.Right: return VirtualKeyCode.RIGHT;
-		//		case Key.Down: return VirtualKeyCode.DOWN;
-		//		case Key.Up: return VirtualKeyCode.UP;
+            // capture screen
+            //graphics.CopyFromScreen(screenRect.Left, screenRect.Top, 0, 0, bitmap.Size, CopyPixelOperation.SourceCopy);
 
-		//		default: return 0;
-		//	}
-		//}
-	}
+            /*
+                            //カーソルをスケール前のビットマップに描画（Graphicsクラスインスタンスを経由して）
+                            Cursor cursor = new Cursor(Cursor.Current.Handle);
+                            Point curPoint = Cursor.Position;
+                            Point hotSpot = cursor.HotSpot;
+                            Point position = new Point((curPoint.X - hotSpot.X),(curPoint.Y - hotSpot.Y));
+                            cursor.Draw(graphics, new Rectangle(position, cursor.Size));
+            */
+
+            if (localScale != 1)
+            {
+                scaledGraphics.DrawImage(bitmap, 0, 0, scaledBitmap.Width, scaledBitmap.Height);
+            }
+            //            }
+        }
+
+        //private VirtualKeyCode ConvertKeyCode(Key keycode)
+        //{
+        //	switch (keycode)
+        //	{
+        //		case Key.A: return VirtualKeyCode.VK_A;
+        //		case Key.B: return VirtualKeyCode.VK_B;
+        //		case Key.C: return VirtualKeyCode.VK_C;
+        //		case Key.D: return VirtualKeyCode.VK_D;
+        //		case Key.E: return VirtualKeyCode.VK_E;
+        //		case Key.F: return VirtualKeyCode.VK_F;
+        //		case Key.G: return VirtualKeyCode.VK_G;
+        //		case Key.H: return VirtualKeyCode.VK_H;
+        //		case Key.I: return VirtualKeyCode.VK_I;
+        //		case Key.J: return VirtualKeyCode.VK_J;
+        //		case Key.K: return VirtualKeyCode.VK_K;
+        //		case Key.L: return VirtualKeyCode.VK_L;
+        //		case Key.M: return VirtualKeyCode.VK_M;
+        //		case Key.N: return VirtualKeyCode.VK_N;
+        //		case Key.O: return VirtualKeyCode.VK_O;
+        //		case Key.P: return VirtualKeyCode.VK_P;
+        //		case Key.Q: return VirtualKeyCode.VK_Q;
+        //		case Key.R: return VirtualKeyCode.VK_R;
+        //		case Key.S: return VirtualKeyCode.VK_S;
+        //		case Key.T: return VirtualKeyCode.VK_T;
+        //		case Key.U: return VirtualKeyCode.VK_U;
+        //		case Key.V: return VirtualKeyCode.VK_V;
+        //		case Key.W: return VirtualKeyCode.VK_W;
+        //		case Key.X: return VirtualKeyCode.VK_X;
+        //		case Key.Y: return VirtualKeyCode.VK_Y;
+        //		case Key.Z: return VirtualKeyCode.VK_Z;
+
+        //		case Key.D0: return VirtualKeyCode.VK_0;
+        //		case Key.D1: return VirtualKeyCode.VK_1;
+        //		case Key.D2: return VirtualKeyCode.VK_2;
+        //		case Key.D3: return VirtualKeyCode.VK_3;
+        //		case Key.D4: return VirtualKeyCode.VK_4;
+        //		case Key.D5: return VirtualKeyCode.VK_5;
+        //		case Key.D6: return VirtualKeyCode.VK_6;
+        //		case Key.D7: return VirtualKeyCode.VK_7;
+        //		case Key.D8: return VirtualKeyCode.VK_8;
+        //		case Key.D9: return VirtualKeyCode.VK_9;
+
+        //		case Key.NumPad0: return VirtualKeyCode.NUMPAD0;
+        //		case Key.NumPad1: return VirtualKeyCode.NUMPAD1;
+        //		case Key.NumPad2: return VirtualKeyCode.NUMPAD2;
+        //		case Key.NumPad3: return VirtualKeyCode.NUMPAD3;
+        //		case Key.NumPad4: return VirtualKeyCode.NUMPAD4;
+        //		case Key.NumPad5: return VirtualKeyCode.NUMPAD5;
+        //		case Key.NumPad6: return VirtualKeyCode.NUMPAD6;
+        //		case Key.NumPad7: return VirtualKeyCode.NUMPAD7;
+        //		case Key.NumPad8: return VirtualKeyCode.NUMPAD8;
+        //		case Key.NumPad9: return VirtualKeyCode.NUMPAD9;
+
+        //		case Key.Subtract: return VirtualKeyCode.SUBTRACT;
+        //		case Key.Add: return VirtualKeyCode.ADD;
+        //		case Key.Multiply: return VirtualKeyCode.MULTIPLY;
+        //		case Key.Divide: return VirtualKeyCode.DIVIDE;
+        //		case Key.Decimal: return VirtualKeyCode.DECIMAL;
+
+        //		case Key.F1: return VirtualKeyCode.F1;
+        //		case Key.F2: return VirtualKeyCode.F2;
+        //		case Key.F3: return VirtualKeyCode.F3;
+        //		case Key.F4: return VirtualKeyCode.F4;
+        //		case Key.F5: return VirtualKeyCode.F5;
+        //		case Key.F6: return VirtualKeyCode.F6;
+        //		case Key.F7: return VirtualKeyCode.F7;
+        //		case Key.F8: return VirtualKeyCode.F8;
+        //		case Key.F9: return VirtualKeyCode.F9;
+        //		case Key.F10: return VirtualKeyCode.F10;
+        //		case Key.F11: return VirtualKeyCode.F11;
+        //		case Key.F12: return VirtualKeyCode.F12;
+
+        //		case Key.LeftShift: return VirtualKeyCode.LSHIFT;
+        //		case Key.RightShift: return VirtualKeyCode.RSHIFT;
+        //		case Key.LeftCtrl: return VirtualKeyCode.LCONTROL;
+        //		case Key.RightCtrl: return VirtualKeyCode.RCONTROL;
+        //		case Key.LeftAlt: return VirtualKeyCode.LMENU;
+        //		case Key.RightAlt: return VirtualKeyCode.RMENU;
+
+        //		case Key.Back: return VirtualKeyCode.BACK;
+        //		case Key.Space: return VirtualKeyCode.SPACE;
+        //		case Key.Return: return VirtualKeyCode.RETURN;
+        //		case Key.Tab: return VirtualKeyCode.TAB;
+        //		case Key.CapsLock: return VirtualKeyCode.CAPITAL;
+        //		case Key.Oem1: return VirtualKeyCode.OEM_1;
+        //		case Key.Oem2: return VirtualKeyCode.OEM_2;
+        //		case Key.Oem3: return VirtualKeyCode.OEM_3;
+        //		case Key.Oem4: return VirtualKeyCode.OEM_4;
+        //		case Key.Oem5: return VirtualKeyCode.OEM_5;
+        //		case Key.Oem6: return VirtualKeyCode.OEM_6;
+        //		case Key.Oem7: return VirtualKeyCode.OEM_7;
+        //		case Key.Oem8: return VirtualKeyCode.OEM_8;
+        //		case Key.OemComma: return VirtualKeyCode.OEM_COMMA;
+        //		case Key.OemPeriod: return VirtualKeyCode.OEM_PERIOD;
+        //		case Key.Escape: return VirtualKeyCode.ESCAPE;
+
+        //		case Key.Home: return VirtualKeyCode.HOME;
+        //		case Key.End: return VirtualKeyCode.END;
+        //		case Key.PageUp: return VirtualKeyCode.PRIOR;
+        //		case Key.PageDown: return VirtualKeyCode.NEXT;
+        //		case Key.Insert: return VirtualKeyCode.INSERT;
+        //		case Key.Delete: return VirtualKeyCode.DELETE;
+
+        //		case Key.Left: return VirtualKeyCode.LEFT;
+        //		case Key.Right: return VirtualKeyCode.RIGHT;
+        //		case Key.Down: return VirtualKeyCode.DOWN;
+        //		case Key.Up: return VirtualKeyCode.UP;
+
+        //		default: return 0;
+        //	}
+        //}
+    }
 
     public class ScreenCapturePInvoke
     {
