@@ -10,6 +10,9 @@ GOAL: Android remote desktop app for PC novel games which consume low network  t
   - Android 5.0 (API level 21 - Lolipop) and later
   - Smartphone and Tablet (ARM based processor)
 
+## How to use
+- pleese see: https://ryogrid.hatenablog.com/entry/2019/05/09/082347 (Japanese only...)
+
 ## License
 - GPL-3.0
 - but codes and libralies of listed below define sevelal licenses. please check linked pages.
@@ -43,3 +46,4 @@ GOAL: Android remote desktop app for PC novel games which consume low network  t
 
 - ScnViewGestures.Forms (library use)
   - https://www.nuget.org/packages/ScnViewGestures.Forms/
+
